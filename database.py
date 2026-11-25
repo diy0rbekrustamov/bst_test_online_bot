@@ -64,11 +64,34 @@ def init_db():
         started_at INTEGER NOT NULL,
         PRIMARY KEY (test_id, student_id)
     )''')
+    _migrate(c)
     c.execute('CREATE INDEX IF NOT EXISTS idx_questions_test ON questions(test_id, order_num)')
     c.execute('CREATE INDEX IF NOT EXISTS idx_results_student ON results(student_id)')
     c.execute('CREATE INDEX IF NOT EXISTS idx_tests_teacher ON tests(teacher_id)')
     conn.commit()
     conn.close()
+
+
+def _migrate(c):
+    """Eski versiyada yaratilgan bazaga yetishmayotgan ustunlarni qo'shadi (ma'lumotlar saqlanadi)."""
+    wanted = {
+        'users':     {'role': "TEXT DEFAULT 'student'", 'created_at': 'TEXT'},
+        'tests':     {'time_limit': 'INTEGER DEFAULT 0', 'created_at': 'TEXT'},
+        'questions': {'order_num': 'INTEGER DEFAULT 0'},
+        'results':   {'answers': 'TEXT', 'cheating_count': 'INTEGER DEFAULT 0', 'completed_at': 'TEXT'},
+    }
+    for table, cols in wanted.items():
+        have = {r[1] for r in c.execute(f'PRAGMA table_info({table})')}
+        for name, ddl in cols.items():
+            if name not in have:
+                c.execute(f'ALTER TABLE {table} ADD COLUMN {name} {ddl}')
+    # Eski bazada UNIQUE cheklovi bo'lmasligi mumkin: bir o'quvchi bir testni ikki marta topshirmasin
+    for ddl in ('CREATE UNIQUE INDEX IF NOT EXISTS uq_results ON results(test_id, student_id)',
+                'CREATE UNIQUE INDEX IF NOT EXISTS uq_tests_code ON tests(code)'):
+        try:
+            c.execute(ddl)
+        except sqlite3.IntegrityError:
+            pass    # eski bazada takror yozuvlar bor — indeks qo'yilmaydi, bot baribir ishlaydi
 
 
 # ── Foydalanuvchilar ─────────────────────────────────────────────────────────
