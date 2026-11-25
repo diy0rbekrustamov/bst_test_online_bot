@@ -5,6 +5,7 @@ run.py — hammasini ishga tushiradi:
   3. Telegram boti
 """
 import os
+import re
 import sys
 import threading
 import time
@@ -46,11 +47,19 @@ def start_tunnel():
         print(f"\n✅ Ngrok URL: {url}\n")
         return url
     except Exception as e:
-        print(f"\n❌ Ngrok ishlamadi: {e}")
-        url = input("HTTPS URL kiriting (ngrok/cloudflared/localtunnel), bo'sh qoldirsangiz chiqiladi: ").strip()
-        if not url:
+        if "ERR_NGROK_4018" in str(e) or "not authenticated" in str(e):
+            print("\n❌ Ngrok akkaunt tokenini talab qiladi (bepul).\n"
+                  "   1) https://dashboard.ngrok.com/signup — ro'yxatdan o'ting\n"
+                  "   2) https://dashboard.ngrok.com/get-started/your-authtoken — tokenni nusxalang\n"
+                  "   3) .env fayliga yangi qator qo'shing:  NGROK_AUTHTOKEN=nusxalangan_token\n"
+                  "   4) start.bat ni qayta ishga tushiring")
             sys.exit(1)
-        return url if url.startswith("https://") else "https://" + url
+        print(f"\n❌ Ngrok ishlamadi: {e}")
+        url = input("Tayyor HTTPS manzil bo'lsa kiriting (masalan https://abc.trycloudflare.com), yo'q bo'lsa Enter: ").strip()
+        if not re.match(r"^https://[\w-]+(\.[\w-]+)+(/.*)?$", url):
+            print("❌ Manzil noto'g'ri. U https:// bilan boshlanib, nuqtali domen bo'lishi kerak.")
+            sys.exit(1)
+        return url
 
 
 if __name__ == '__main__':
