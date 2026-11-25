@@ -13,13 +13,16 @@ import config
 from database import init_db, get_user
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
+# httpx har so'rovni bot tokeni bilan birga loglaydi — token log orqali sizib chiqmasin
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
 log = logging.getLogger(__name__)
 
 
 def webapp_markup():
     """Mini App tugmasi. URL hali yo'q bo'lsa None."""
     url = config.WEBAPP_URL
-    if not url or not url.startswith('https://'):
+    if not url or not url.startswith('https://') or '.' not in url:
         return None
     return InlineKeyboardMarkup([[InlineKeyboardButton("🎓 Testni ochish", web_app=WebAppInfo(url=url))]])
 
@@ -63,7 +66,7 @@ async def on_error(update, context: ContextTypes.DEFAULT_TYPE):
 
 async def post_init(app: Application):
     """Chatdagi pastki menyu tugmasini Mini App ga ulaydi."""
-    if config.WEBAPP_URL.startswith('https://'):
+    if config.WEBAPP_URL.startswith('https://') and '.' in config.WEBAPP_URL:
         try:
             await app.bot.set_chat_menu_button(
                 menu_button=MenuButtonWebApp(text="Test", web_app=WebAppInfo(url=config.WEBAPP_URL)))
