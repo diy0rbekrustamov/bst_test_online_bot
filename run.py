@@ -1,59 +1,79 @@
 """
-run.py — Hamma narsani ishga tushiradi:
+run.py — hammasini ishga tushiradi:
   1. Flask serveri (webapp + API)
   2. Ngrok tunnel (HTTPS URL)
   3. Telegram boti
 """
-import threading, sys, time
+import os
+import sys
+import threading
+import time
+import urllib.request
+
 import config
 from database import init_db
 
+
 def start_flask():
     from app import app
-    init_db()
-    app.run(port=config.PORT, debug=False, use_reloader=False)
+    app.run(host='127.0.0.1', port=config.PORT, debug=False, use_reloader=False)
 
-def start_ngrok():
+
+def wait_for_flask(timeout=15):
+    """Server haqiqatan javob bera boshlaguncha kutadi (oldin shunchaki 2 soniya kutilardi)."""
+    end = time.time() + timeout
+    while time.time() < end:
+        try:
+            urllib.request.urlopen(f"http://127.0.0.1:{config.PORT}/", timeout=1)
+            return True
+        except Exception:
+            time.sleep(0.3)
+    return False
+
+
+def start_tunnel():
+    # Tayyor URL berilgan bo'lsa (masalan, serverda) tunnel kerak emas
+    if config.WEBAPP_URL.startswith("https://"):
+        return config.WEBAPP_URL
+
     try:
         from pyngrok import ngrok
+        token = os.getenv("NGROK_AUTHTOKEN")
+        if token:
+            ngrok.set_auth_token(token)
         tunnel = ngrok.connect(config.PORT, "http")
         url = tunnel.public_url.replace("http://", "https://")
-        config.WEBAPP_URL = url
-        import bot as bot_module
-        bot_module.WEBAPP_URL = url
-        print(f"\n✅ Ngrok URL: {url}")
-        print(f"   Mini App URL: {url}\n")
-        return url
-    except ImportError:
-        print("\n⚠️  pyngrok topilmadi. Qo'lda URL kiriting.")
-        url = input("HTTPS URL (ngrok/localtunnel): ").strip()
-        if not url.startswith("https://"):
-            url = "https://" + url
-        config.WEBAPP_URL = url
+        print(f"\n✅ Ngrok URL: {url}\n")
         return url
     except Exception as e:
-        print(f"\n❌ Ngrok xatosi: {e}")
-        url = input("HTTPS URL kiriting: ").strip()
-        config.WEBAPP_URL = url
-        return url
+        print(f"\n❌ Ngrok ishlamadi: {e}")
+        url = input("HTTPS URL kiriting (ngrok/cloudflared/localtunnel), bo'sh qoldirsangiz chiqiladi: ").strip()
+        if not url:
+            sys.exit(1)
+        return url if url.startswith("https://") else "https://" + url
+
 
 if __name__ == '__main__':
     print("=" * 50)
-    print("🎓 Online Test Bot — Ishga tushmoqda...")
+    print("🎓 Online Test Bot — ishga tushmoqda...")
     print("=" * 50)
 
-    # 1. Flask serverni fon oqimida boshlash
-    flask_thread = threading.Thread(target=start_flask, daemon=True)
-    flask_thread.start()
-    time.sleep(2)
-    print("✅ Flask server: http://localhost:5000")
+    if "YOUR_BOT_TOKEN_HERE" in config.BOT_TOKEN:
+        print("❌ Bot tokeni kiritilmagan.\n"
+              "   Shu papkada .env fayl yarating va ichiga yozing:\n"
+              "   BOT_TOKEN=1234567890:ABCdef...")
+        sys.exit(1)
 
-    # 2. Ngrok tunnel
-    webapp_url = start_ngrok()
+    init_db()
+    threading.Thread(target=start_flask, daemon=True).start()
+    if not wait_for_flask():
+        print("❌ Flask server ishga tushmadi (port band bo'lishi mumkin: PORT o'zgartiring).")
+        sys.exit(1)
+    print(f"✅ Flask server: http://localhost:{config.PORT}")
 
-    # 3. Telegram boti
+    config.WEBAPP_URL = start_tunnel()
+    print(f"✅ Mini App URL: {config.WEBAPP_URL}")
+
     import bot as bot_module
-    bot_module.config.WEBAPP_URL = webapp_url
     print(f"✅ Bot token: {config.BOT_TOKEN[:10]}...")
-    print("✅ Botni ishga tushirish...")
     bot_module.run_bot()

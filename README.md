@@ -1,64 +1,38 @@
-# 🎓 Online Test Bot (Telegram)
+# 🎓 Online Test Bot (Telegram Mini App)
 
-O'qituvchi va o'quvchi uchun test platformasi.
+O'qituvchi test yaratadi va 6 xonali kod beradi, o'quvchi shu kod bilan testni yechadi.
+Natija o'qituvchiga Telegramga xabar bo'lib keladi.
 
-## 🚀 O'rnatish
+## 🚀 Ishga tushirish
 
-### 1. Python o'rnating
-Python 3.10+ kerak: https://python.org
+1. **Python 3.10+** o'rnating: https://python.org
+2. **Bot token** oling: Telegramda `@BotFather` → `/newbot`
+3. Shu papkada `.env` fayl yarating:
+   ```
+   BOT_TOKEN=1234567890:ABCdef...
+   ```
+   (`.env` GitHub ga yuklanmaydi — token xavfsiz qoladi. Tokenni `config.py` ga yozmang.)
+4. *(ixtiyoriy)* [ngrok](https://ngrok.com) akkaunti bo'lsa, `.env` ga `NGROK_AUTHTOKEN=...` qo'shing.
+5. Ishga tushiring:
+   - Windows: `start.bat` ni ikki marta bosing
+   - boshqa: `pip install -r requirements.txt` va `python run.py`
 
-### 2. Kutubxonalarni o'rnating
-```bash
-cd C:\Users\user\.gemini\antigravity\scratch\quiz_bot
-pip install -r requirements.txt
-```
+`run.py` Flask serverni, ngrok HTTPS manzilini va botni birga ishga tushiradi. Botga `/start` yuboring.
 
-### 3. Bot tokeni oling
-1. Telegramda `@BotFather` ga yozing
-2. `/newbot` buyrug'ini yuboring
-3. Bot nomini kiriting (misol: `Online Test Bot`)
-4. Bot username kiriting (misol: `my_quiz_bot`)
-5. Token beriladi: `1234567890:ABCdef...`
+> ⚠️ ngrok bepul tarifida har safar yangi manzil beriladi — `run.py` botni avtomatik yangilaydi.
+> Doimiy ishlashi uchun serverga joylab, `.env` ga `WEBAPP_URL=https://sizning-domen.uz` yozing (shunda ngrok kerak bo'lmaydi).
 
-### 4. Tokenni sozlang
-`bot.py` faylini oching va:
-```python
-BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"
-```
-o'rniga botfather bergan tokenni qo'ying:
-```python
-BOT_TOKEN = "1234567890:ABCdef..."
-```
+### Sozlamalar (`.env`)
 
-### 5. Botni ishga tushiring
-```bash
-python bot.py
-```
-
----
-
-## 📱 Foydalanish
-
-### 👨‍🏫 O'qituvchi uchun:
-1. `/start` - Ro'yxatdan o'tish
-2. **O'qituvchi** rolini tanlash
-3. **➕ Test yaratish** → Fan tanlash → Test nomi → Savollarni kiritish
-4. Test kodi olinadi (6 xonali)
-5. Kodni o'quvchilarga yuborish
-6. **📊 Mening testlarim** - natijalarni ko'rish
-
-### 👨‍🎓 O'quvchi uchun:
-1. `/start` - Ro'yxatdan o'tish
-2. **O'quvchi** rolini tanlash
-3. **📝 Test yechish** → 6 xonali kod kiritish
-4. Savollarni yechish
-5. Natija ko'rsatiladi
-
----
+| O'zgaruvchi | Ma'nosi |
+|---|---|
+| `BOT_TOKEN` | BotFather tokeni (majburiy) |
+| `WEBAPP_URL` | Tayyor HTTPS manzil bo'lsa (ngrok o'rniga) |
+| `PORT` | Server porti (standart 5000) |
+| `NGROK_AUTHTOKEN` | ngrok tokeni |
+| `DEV_MODE=1` | **Faqat o'z kompyuteringizda** brauzerda sinash uchun: `http://localhost:5000/?dev=123`. Serverda yoqmang! |
 
 ## 📝 Savol formati
-
-Savollarni quyidagi formatda kiriting:
 
 ```
 ?O'zbekistonning poytaxti qayer?
@@ -66,41 +40,22 @@ Savollarni quyidagi formatda kiriting:
 -Samarqand
 +Toshkent
 -Andijon
-
-?2+2 nechaga teng?
--3
-+4
--5
--6
 ```
 
-**Qoidalar:**
-- `?` - savol boshlanishi
-- `+` - TO'G'RI javob (faqat 1 ta bo'lishi kerak)
-- `-` - NOTO'G'RI javob
-- Kamida 2 ta javob variant bo'lishi shart
+- `?` savol, `+` to'g'ri javob (faqat **bitta**), `-` noto'g'ri javob
+- Kamida 2 ta, ko'pi bilan 8 ta variant
+- Uzun savol yoki variant keyingi qatorga o'tishi mumkin
+- Xato bloklar "Tekshiruv" oynasida sababi bilan ko'rsatiladi, qolgan savollar saqlanadi
 
----
+## ✨ Imkoniyatlar
 
-## ✨ Xususiyatlar
-
-- ✅ Ro'yxatdan o'tish (ism + telefon)
-- ✅ O'qituvchi / O'quvchi rollari
-- ✅ 15 ta fan tanlash
-- ✅ Test yaratish va kodni ulashish
-- ✅ Vaqt belgilash (ixtiyoriy)
-- ✅ Test yechish (inline buttons)
-- ✅ Natija: to'g'ri/noto'g'ri/foiz/baho
-- ✅ O'qituvchiga avtomatik xabar
-- ✅ Statistika ko'rish
-- ✅ Profil sahifasi
-
----
+- O'qituvchi: 15 ta fan, test yaratish, kodni nusxalash, natijalar (o'rtacha foiz, reyting), testni o'chirish
+- O'quvchi: kod bilan kirish, savollar bo'ylab erkin yurish, natija va baho
+- Vaqt chegarasi **serverda** nazorat qilinadi; ilovani yopib-ochsa vaqt to'xtamaydi, javoblar saqlanadi
+- Ilovadan chiqib ketishlar sanaladi (3-marta test avtomatik topshiriladi) va o'qituvchiga ma'lum qilinadi
+- Har bir so'rov Telegram imzosi bilan tekshiriladi — boshqa odamning nomidan kirib bo'lmaydi
 
 ## 🗄️ Ma'lumotlar bazasi
 
-SQLite (quiz_bot.db) faylida saqlanadi:
-- `users` - foydalanuvchilar
-- `tests` - testlar
-- `questions` - savollar
-- `results` - natijalar
+SQLite (`quiz_bot.db`): `users`, `tests`, `questions`, `results`, `attempts`.
+Fayl foydalanuvchilarning telefon raqamlarini saqlaydi, shuning uchun u `.gitignore` da.

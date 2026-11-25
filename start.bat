@@ -10,18 +10,37 @@ echo.
 
 cd /d %~dp0
 
-set PYTHON=C:\Users\user\AppData\Local\Python\pythoncore-3.15-64\python.exe
+rem Python ni avtomatik topadi (py launcher yoki python)
+set PYTHON=
+where py >nul 2>nul && set PYTHON=py
+if not defined PYTHON (
+    where python >nul 2>nul && set PYTHON=python
+)
+if not defined PYTHON (
+    echo [XATO] Python topilmadi. https://python.org dan o'rnating.
+    pause
+    exit /b 1
+)
+
+if not exist .env (
+    echo [XATO] .env fayl topilmadi.
+    echo        Shu papkada .env fayl yarating va ichiga yozing:
+    echo        BOT_TOKEN=1234567890:ABCdef...
+    pause
+    exit /b 1
+)
 
 echo [1] Kutubxonalar o'rnatilmoqda...
-%PYTHON% -m pip install flask flask-cors pyngrok requests -q
+%PYTHON% -m pip install -r requirements.txt -q
+if errorlevel 1 (
+    echo [XATO] Kutubxonalarni o'rnatib bo'lmadi.
+    pause
+    exit /b 1
+)
 echo [OK] Kutubxonalar tayyor
 echo.
 
-echo [2] BOT TOKEN kiriting (config.py da ham o'zgartiring):
-echo     Hozir config.py dagi tokendan foydalaniladi
-echo.
-
-echo [3] Bot va server ishga tushmoqda...
+echo [2] Bot va server ishga tushmoqda...
 echo     Ngrok URL avtomatik olinadi...
 echo.
 %PYTHON% run.py

@@ -1,0 +1,12 @@
+# Maxfiy ma'lumotlar
+.env
+
+# Ma'lumotlar bazasi (foydalanuvchilar telefon raqamlari bor)
+*.db
+*.db-journal
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
