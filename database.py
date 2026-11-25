@@ -1,12 +1,22 @@
-import sqlite3, random, string, re
-from datetime import datetime
+import json
+import re
+import secrets
+import sqlite3
+import time
 
-DB_PATH = 'quiz_bot.db'
+import config
+
+DB_PATH = config.DB_PATH
+
+MAX_OPTIONS = 8
+MAX_QUESTIONS = 200
+
 
 def get_db():
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, timeout=10)
     conn.row_factory = sqlite3.Row
     return conn
+
 
 def init_db():
     conn = get_db()
@@ -46,157 +56,289 @@ def init_db():
         completed_at TEXT DEFAULT CURRENT_TIMESTAMP,
         UNIQUE(test_id, student_id)
     )''')
+    # Testni boshlash vaqti SERVERDA saqlanadi: vaqt chegarasini aldab bo'lmasin
+    # va ilovani yopib-ochib savollarni qayta ko'rib bo'lmasin.
+    c.execute('''CREATE TABLE IF NOT EXISTS attempts (
+        test_id INTEGER NOT NULL,
+        student_id INTEGER NOT NULL,
+        started_at INTEGER NOT NULL,
+        PRIMARY KEY (test_id, student_id)
+    )''')
+    c.execute('CREATE INDEX IF NOT EXISTS idx_questions_test ON questions(test_id, order_num)')
+    c.execute('CREATE INDEX IF NOT EXISTS idx_results_student ON results(student_id)')
+    c.execute('CREATE INDEX IF NOT EXISTS idx_tests_teacher ON tests(teacher_id)')
     conn.commit()
     conn.close()
 
+
+# ── Foydalanuvchilar ─────────────────────────────────────────────────────────
 def get_user(user_id):
     conn = get_db()
-    c = conn.cursor()
-    c.execute('SELECT * FROM users WHERE user_id=?', (user_id,))
-    r = c.fetchone()
+    r = conn.execute('SELECT * FROM users WHERE user_id=?', (user_id,)).fetchone()
     conn.close()
     return dict(r) if r else None
+
 
 def save_user(user_id, full_name, phone, role='student'):
     conn = get_db()
-    c = conn.cursor()
-    c.execute('INSERT OR REPLACE INTO users(user_id,full_name,phone,role) VALUES(?,?,?,?)',
-              (user_id, full_name, phone, role))
+    # INSERT OR REPLACE created_at ni qayta yozib yuborardi
+    conn.execute('''INSERT INTO users(user_id,full_name,phone,role) VALUES(?,?,?,?)
+                    ON CONFLICT(user_id) DO UPDATE SET
+                      full_name=excluded.full_name, phone=excluded.phone, role=excluded.role''',
+                 (user_id, full_name, phone, role))
     conn.commit()
     conn.close()
+
 
 def update_role(user_id, role):
     conn = get_db()
-    c = conn.cursor()
-    c.execute('UPDATE users SET role=? WHERE user_id=?', (role, user_id))
+    conn.execute('UPDATE users SET role=? WHERE user_id=?', (role, user_id))
     conn.commit()
     conn.close()
 
+
+# ── Savollarni o'qish (parser) ───────────────────────────────────────────────
 def gen_code():
-    while True:
-        code = ''.join(random.choices(string.digits, k=6))
-        conn = get_db()
-        c = conn.cursor()
-        c.execute('SELECT id FROM tests WHERE code=?', (code,))
-        if not c.fetchone():
-            conn.close()
-            return code
+    conn = get_db()
+    try:
+        while True:
+            code = ''.join(secrets.choice('0123456789') for _ in range(6))
+            if not conn.execute('SELECT 1 FROM tests WHERE code=?', (code,)).fetchone():
+                return code
+    finally:
         conn.close()
 
+
 def parse_questions(text):
+    """
+    Format:
+        ?Savol
+        -noto'g'ri
+        +to'g'ri
+    Savol yoki variant bir necha qatorga cho'zilsa, keyingi qatorlar oldingisiga qo'shiladi.
+    """
     questions, errors = [], []
-    blocks = re.split(r'\n(?=\?)', text.strip())
-    for i, block in enumerate(blocks, 1):
-        block = block.strip()
-        if not block or not block.startswith('?'):
+    text = (text or '').replace('\r\n', '\n').replace('\r', '\n').strip()
+    if not text:
+        return questions, errors
+
+    blocks = [b.strip() for b in re.split(r'\n(?=[ \t]*\?)', text)]
+    for i, block in enumerate([b for b in blocks if b], 1):
+        if not block.startswith('?'):
+            errors.append({'num': i, 'question': block.split('\n')[0][:60],
+                           'reason': "Savol '?' belgisi bilan boshlanishi kerak"})
             continue
+
         lines = block.split('\n')
         q_text = lines[0][1:].strip()
-        options, correct = [], -1
+        options, correct_idxs = [], []
         for ln in lines[1:]:
             ln = ln.strip()
-            if not ln: continue
-            if ln.startswith('+'):
-                correct = len(options)
+            if not ln:
+                continue
+            if ln[0] == '+':
+                correct_idxs.append(len(options))
                 options.append(ln[1:].strip())
-            elif ln.startswith('-'):
+            elif ln[0] == '-':
                 options.append(ln[1:].strip())
+            elif options:            # variantning davomi
+                options[-1] += ' ' + ln
+            else:                    # savol matnining davomi
+                q_text += ' ' + ln
+
         if not q_text:
-            errors.append({'num': i, 'reason': 'Savol matni yo\'q'})
+            errors.append({'num': i, 'reason': "Savol matni yo'q"})
+        elif any(not o for o in options):
+            errors.append({'num': i, 'question': q_text, 'reason': "Bo'sh variant bor"})
         elif len(options) < 2:
-            errors.append({'num': i, 'question': q_text, 'reason': 'Kamida 2 javob kerak'})
-        elif correct < 0:
-            errors.append({'num': i, 'question': q_text, 'reason': 'To\'g\'ri javob (+) yo\'q'})
+            errors.append({'num': i, 'question': q_text, 'reason': "Kamida 2 ta variant kerak"})
+        elif len(options) > MAX_OPTIONS:
+            errors.append({'num': i, 'question': q_text, 'reason': f"{MAX_OPTIONS} tadan ko'p variant bo'lmaydi"})
+        elif len(correct_idxs) == 0:
+            errors.append({'num': i, 'question': q_text, 'reason': "To'g'ri javob (+) belgilanmagan"})
+        elif len(correct_idxs) > 1:
+            errors.append({'num': i, 'question': q_text, 'reason': "To'g'ri javob (+) faqat bitta bo'lishi kerak"})
+        elif len({o.casefold() for o in options}) != len(options):
+            errors.append({'num': i, 'question': q_text, 'reason': "Bir xil variantlar bor"})
         else:
-            questions.append({'question': q_text, 'options': options, 'correct': correct})
+            questions.append({'question': q_text, 'options': options, 'correct': correct_idxs[0]})
     return questions, errors
 
+
+def validate_questions(questions):
+    """Klientdan kelgan savollarni qayta tekshiradi. Xato bo'lsa matn qaytaradi."""
+    if not isinstance(questions, list) or not questions:
+        return "Savollar yo'q"
+    if len(questions) > MAX_QUESTIONS:
+        return f"Eng ko'pi bilan {MAX_QUESTIONS} ta savol"
+    for q in questions:
+        if not isinstance(q, dict):
+            return "Savol formati noto'g'ri"
+        text, opts, correct = q.get('question'), q.get('options'), q.get('correct')
+        if not isinstance(text, str) or not text.strip():
+            return "Savol matni bo'sh"
+        if not isinstance(opts, list) or not (2 <= len(opts) <= MAX_OPTIONS):
+            return "Variantlar soni noto'g'ri"
+        if not all(isinstance(o, str) and o.strip() for o in opts):
+            return "Bo'sh variant bor"
+        if not isinstance(correct, int) or isinstance(correct, bool) or not (0 <= correct < len(opts)):
+            return "To'g'ri javob indeksi noto'g'ri"
+    return None
+
+
+# ── Testlar ──────────────────────────────────────────────────────────────────
+def _encode_options(options):
+    return json.dumps(options, ensure_ascii=False)
+
+
+def decode_options(raw):
+    """Yangi testlar JSON, eskilari '|||' bilan saqlangan — ikkalasini o'qiydi."""
+    try:
+        v = json.loads(raw)
+        if isinstance(v, list):
+            return [str(x) for x in v]
+    except (ValueError, TypeError):
+        pass
+    return raw.split('|||')
+
+
 def create_test(teacher_id, subject, test_name, questions, time_limit=0):
-    code = gen_code()
     conn = get_db()
-    c = conn.cursor()
-    c.execute('INSERT INTO tests(code,teacher_id,subject,test_name,time_limit) VALUES(?,?,?,?,?)',
-              (code, teacher_id, subject, test_name, time_limit))
-    tid = c.lastrowid
-    for n, q in enumerate(questions):
-        c.execute('INSERT INTO questions(test_id,question_text,options,correct_index,order_num) VALUES(?,?,?,?,?)',
-                  (tid, q['question'], '|||'.join(q['options']), q['correct'], n))
-    conn.commit()
+    try:
+        for _ in range(10):
+            code = gen_code()
+            try:
+                c = conn.cursor()
+                c.execute('INSERT INTO tests(code,teacher_id,subject,test_name,time_limit) VALUES(?,?,?,?,?)',
+                          (code, teacher_id, subject, test_name, time_limit))
+                tid = c.lastrowid
+                c.executemany(
+                    'INSERT INTO questions(test_id,question_text,options,correct_index,order_num) VALUES(?,?,?,?,?)',
+                    [(tid, q['question'].strip(), _encode_options([o.strip() for o in q['options']]),
+                      q['correct'], n) for n, q in enumerate(questions)])
+                conn.commit()
+                return code, tid
+            except sqlite3.IntegrityError:   # kod to'qnashdi — qayta urinib ko'ramiz
+                conn.rollback()
+        raise RuntimeError("Test kodi yaratib bo'lmadi")
+    finally:
+        conn.close()
+
+
+def _test_query(where, param):
+    conn = get_db()
+    r = conn.execute(f'''SELECT t.*, COALESCE(u.full_name, "—") AS teacher_name,
+                                (SELECT COUNT(*) FROM questions q WHERE q.test_id=t.id) AS question_count
+                         FROM tests t LEFT JOIN users u ON t.teacher_id=u.user_id
+                         WHERE {where}''', (param,)).fetchone()
     conn.close()
-    return code, tid
+    return dict(r) if r else None
+
 
 def get_test_by_code(code):
-    conn = get_db()
-    c = conn.cursor()
-    c.execute('''SELECT t.*, u.full_name AS teacher_name
-                 FROM tests t JOIN users u ON t.teacher_id=u.user_id
-                 WHERE t.code=?''', (code,))
-    r = c.fetchone()
-    conn.close()
-    return dict(r) if r else None
+    return _test_query('t.code=?', code)
+
 
 def get_test_by_id(test_id):
-    conn = get_db()
-    c = conn.cursor()
-    c.execute('''SELECT t.*, u.full_name AS teacher_name
-                 FROM tests t JOIN users u ON t.teacher_id=u.user_id
-                 WHERE t.id=?''', (test_id,))
-    r = c.fetchone()
-    conn.close()
-    return dict(r) if r else None
+    return _test_query('t.id=?', test_id)
+
 
 def get_questions(test_id):
     conn = get_db()
-    c = conn.cursor()
-    c.execute('SELECT * FROM questions WHERE test_id=? ORDER BY order_num', (test_id,))
-    rows = c.fetchall()
+    rows = conn.execute('SELECT * FROM questions WHERE test_id=? ORDER BY order_num, id', (test_id,)).fetchall()
     conn.close()
-    return [dict(r) for r in rows]
+    out = []
+    for r in rows:
+        d = dict(r)
+        d['options'] = decode_options(d['options'])
+        out.append(d)
+    return out
 
-def already_attempted(test_id, student_id):
+
+def delete_test(test_id, teacher_id):
     conn = get_db()
     c = conn.cursor()
-    c.execute('SELECT id FROM results WHERE test_id=? AND student_id=?', (test_id, student_id))
-    r = c.fetchone()
+    c.execute('SELECT id FROM tests WHERE id=? AND teacher_id=?', (test_id, teacher_id))
+    if not c.fetchone():
+        conn.close()
+        return False
+    for table in ('results', 'attempts', 'questions'):
+        c.execute(f'DELETE FROM {table} WHERE test_id=?', (test_id,))
+    c.execute('DELETE FROM tests WHERE id=?', (test_id,))
+    conn.commit()
+    conn.close()
+    return True
+
+
+# ── Urinishlar va natijalar ──────────────────────────────────────────────────
+def already_attempted(test_id, student_id):
+    conn = get_db()
+    r = conn.execute('SELECT 1 FROM results WHERE test_id=? AND student_id=?', (test_id, student_id)).fetchone()
     conn.close()
     return r is not None
 
-def save_result(test_id, student_id, score, total, answers, cheating_count=0):
+
+def start_attempt(test_id, student_id):
+    """Boshlanish vaqtini (epoch, soniya) qaytaradi. Qayta chaqirilsa eskisini beradi."""
     conn = get_db()
-    c = conn.cursor()
-    c.execute('''INSERT OR REPLACE INTO results(test_id,student_id,score,total,answers,cheating_count)
-                 VALUES(?,?,?,?,?,?)''',
-              (test_id, student_id, score, total, ','.join(map(str, answers)), cheating_count))
+    conn.execute('INSERT OR IGNORE INTO attempts(test_id,student_id,started_at) VALUES(?,?,?)',
+                 (test_id, student_id, int(time.time())))
     conn.commit()
+    r = conn.execute('SELECT started_at FROM attempts WHERE test_id=? AND student_id=?',
+                     (test_id, student_id)).fetchone()
     conn.close()
+    return r['started_at']
+
+
+def get_attempt_start(test_id, student_id):
+    conn = get_db()
+    r = conn.execute('SELECT started_at FROM attempts WHERE test_id=? AND student_id=?',
+                     (test_id, student_id)).fetchone()
+    conn.close()
+    return r['started_at'] if r else None
+
+
+def save_result(test_id, student_id, score, total, answers, cheating_count=0):
+    """Natija saqlansa True; allaqachon bor bo'lsa (parallel so'rov) False."""
+    conn = get_db()
+    try:
+        conn.execute('''INSERT INTO results(test_id,student_id,score,total,answers,cheating_count)
+                        VALUES(?,?,?,?,?,?)''',
+                     (test_id, student_id, score, total, ','.join(map(str, answers)), cheating_count))
+        conn.commit()
+        return True
+    except sqlite3.IntegrityError:
+        return False
+    finally:
+        conn.close()
+
 
 def get_test_results(test_id):
     conn = get_db()
-    c = conn.cursor()
-    c.execute('''SELECT u.full_name, r.score, r.total, r.cheating_count, r.completed_at
-                 FROM results r JOIN users u ON r.student_id=u.user_id
-                 WHERE r.test_id=? ORDER BY r.score DESC''', (test_id,))
-    rows = c.fetchall()
+    rows = conn.execute('''SELECT u.full_name, r.score, r.total, r.cheating_count, r.completed_at
+                           FROM results r LEFT JOIN users u ON r.student_id=u.user_id
+                           WHERE r.test_id=? ORDER BY r.score DESC, r.cheating_count ASC, r.completed_at ASC''',
+                        (test_id,)).fetchall()
     conn.close()
     return [dict(r) for r in rows]
+
 
 def get_teacher_tests(teacher_id):
     conn = get_db()
-    c = conn.cursor()
-    c.execute('''SELECT t.*, COUNT(r.id) AS participants
-                 FROM tests t LEFT JOIN results r ON t.id=r.test_id
-                 WHERE t.teacher_id=?
-                 GROUP BY t.id ORDER BY t.created_at DESC''', (teacher_id,))
-    rows = c.fetchall()
+    rows = conn.execute('''SELECT t.*, COUNT(r.id) AS participants,
+                                  (SELECT COUNT(*) FROM questions q WHERE q.test_id=t.id) AS question_count
+                           FROM tests t LEFT JOIN results r ON t.id=r.test_id
+                           WHERE t.teacher_id=?
+                           GROUP BY t.id ORDER BY t.created_at DESC, t.id DESC''', (teacher_id,)).fetchall()
     conn.close()
     return [dict(r) for r in rows]
 
+
 def get_student_results(student_id):
     conn = get_db()
-    c = conn.cursor()
-    c.execute('''SELECT t.test_name, t.subject, r.score, r.total, r.cheating_count, r.completed_at
-                 FROM results r JOIN tests t ON r.test_id=t.id
-                 WHERE r.student_id=? ORDER BY r.completed_at DESC''', (student_id,))
-    rows = c.fetchall()
+    rows = conn.execute('''SELECT t.test_name, t.subject, r.score, r.total, r.cheating_count, r.completed_at
+                           FROM results r JOIN tests t ON r.test_id=t.id
+                           WHERE r.student_id=? ORDER BY r.completed_at DESC, r.id DESC''',
+                        (student_id,)).fetchall()
     conn.close()
     return [dict(r) for r in rows]

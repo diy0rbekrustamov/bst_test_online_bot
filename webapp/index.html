@@ -2,374 +2,327 @@
 <html lang="uz">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="color-scheme" content="light">
 <title>Online Test</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=Unbounded:wght@500;700&display=swap" rel="stylesheet">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-/* ═══════════════════════════════════════════════
-   GLOBAL
-═══════════════════════════════════════════════ */
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+/* ═════════ Tokenlar ═════════
+   Mavzu: test blankasi. Siyoh (qora ruchka), ultramarin (to'ldirilgan doira),
+   sariq (belgilagich) — faqat vaqt va kod uchun. */
 :root{
-  --blue:#4361ee;--blue-dark:#3a56d4;--green:#16a34a;--red:#dc2626;
-  --amber:#d97706;--gray:#6b7280;--light:#f3f4f6;--white:#fff;
-  --shadow:0 2px 12px rgba(0,0,0,.12);--radius:14px;
+  --ink:#101828; --paper:#F4F6FA; --card:#fff; --line:#DCE1EA; --muted:#5B6577;
+  --blue:#2438D6; --blue-soft:#E8EBFF; --hl:#FFD84D; --hl-soft:#FFF6CC;
+  --ok:#0E9F6E; --ok-soft:#DDF5EA; --bad:#D92D20; --bad-soft:#FDE8E6; --warn:#B54708;
+  --r-card:18px; --r-btn:14px; --r-sm:10px;
+  --font:'Onest',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --display:'Unbounded','Onest',system-ui,sans-serif;
+  --tabbar:64px;
 }
-html,body{height:100%;background:#f0f4ff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-  font-size:15px;color:#1f2937;overflow:hidden}
-/* Anti-cheat: no selection, no context menu */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--paper);color:var(--ink);font:400 15px/1.5 var(--font);overflow:hidden}
 body{-webkit-user-select:none;user-select:none}
+input,textarea,select{-webkit-user-select:text;user-select:text;font-family:inherit}
+button{font-family:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.02em;line-height:1.2}
 
-/* ═══════════════════════════════════════════════
-   PAGES
-═══════════════════════════════════════════════ */
-.page{position:fixed;inset:0;display:none;flex-direction:column;background:#f0f4ff;overflow-y:auto}
+/* ═════════ Sahifalar ═════════ */
+.page{position:fixed;inset:0;display:none;flex-direction:column;overflow-y:auto;overscroll-behavior:contain;background:var(--paper)}
 .page.active{display:flex}
+.content{flex:1;padding:16px 16px 32px;width:100%;max-width:560px;margin:0 auto}
+.page.tabbed .content{padding-bottom:calc(var(--tabbar) + 32px + env(safe-area-inset-bottom))}
 
-/* ═══════════════════════════════════════════════
-   HEADER
-═══════════════════════════════════════════════ */
-.header{background:var(--blue);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px;
-  position:sticky;top:0;z-index:10;min-height:56px}
-.header h2{flex:1;font-size:17px;font-weight:600}
-.header .back{background:rgba(255,255,255,.2);border:none;color:#fff;width:36px;height:36px;
-  border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.header{position:sticky;top:0;z-index:10;background:var(--paper);display:flex;align-items:center;gap:12px;
+  padding:12px 16px;min-height:60px;border-bottom:1px solid var(--line)}
+.header h2{font-size:17px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.back{width:38px;height:38px;border-radius:50%;border:1.5px solid var(--ink);background:transparent;
+  font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.back:active{background:var(--ink);color:#fff}
 
-/* ═══════════════════════════════════════════════
-   BOTTOM NAV
-═══════════════════════════════════════════════ */
-.bottom-nav{background:#fff;border-top:1px solid #e5e7eb;padding:8px 0 env(safe-area-inset-bottom);
-  display:flex;justify-content:space-around;position:sticky;bottom:0;z-index:10}
-.bottom-nav button{background:none;border:none;display:flex;flex-direction:column;align-items:center;
-  gap:2px;font-size:11px;color:var(--gray);cursor:pointer;padding:4px 12px}
-.bottom-nav button span{font-size:22px}
-.bottom-nav button.active{color:var(--blue)}
+/* ═════════ Tugmalar ═════════ */
+.btn{width:100%;min-height:50px;padding:12px 18px;border:2px solid var(--ink);border-radius:var(--r-btn);
+  font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
+  background:var(--ink);color:#fff;transition:transform .08s}
+.btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-outline{background:transparent;color:var(--ink)}
+.btn-ok{background:var(--ok);border-color:var(--ok)}
+.btn-bad{background:var(--bad);border-color:var(--bad)}
+.btn-quiet{background:transparent;border-color:transparent;color:var(--bad);min-height:44px}
+.btn-sm{width:auto;min-height:40px;padding:8px 16px;font-size:14px;border-radius:12px}
+.row{display:flex;gap:10px}
+.row>*{flex:1}
 
-/* ═══════════════════════════════════════════════
-   CARDS & CONTENT
-═══════════════════════════════════════════════ */
-.content{flex:1;padding:16px;overflow-y:auto}
-.card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:14px}
-.card h3{font-size:16px;font-weight:600;margin-bottom:8px}
+/* ═════════ Kartalar va forma ═════════ */
+.card{background:var(--card);border:1.5px solid var(--line);border-radius:var(--r-card);padding:16px;margin-bottom:12px}
+.card.flat{background:transparent}
+.title{font-size:24px;margin-bottom:6px}
+.lead{color:var(--muted);margin-bottom:20px}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+.field input,.field textarea,.field select{width:100%;padding:13px 14px;border:2px solid var(--line);
+  border-radius:12px;font-size:16px;background:#fff;color:var(--ink);outline:none;transition:border-color .15s}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--blue)}
+.field textarea{min-height:190px;resize:vertical;font:13.5px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.err{color:var(--bad);font-size:13px;font-weight:500;margin:-4px 0 12px;display:none}
+.err.show{display:block}
 
-/* ═══════════════════════════════════════════════
-   BUTTONS
-═══════════════════════════════════════════════ */
-.btn{width:100%;padding:14px;border:none;border-radius:12px;font-size:15px;font-weight:600;
-  cursor:pointer;transition:opacity .15s;display:flex;align-items:center;justify-content:center;gap:8px}
-.btn:active{opacity:.8}
-.btn-primary{background:var(--blue);color:#fff}
-.btn-success{background:var(--green);color:#fff}
-.btn-danger{background:var(--red);color:#fff}
-.btn-outline{background:#fff;border:2px solid var(--blue);color:var(--blue)}
-.btn-gray{background:var(--light);color:#374151}
-.btn-sm{padding:9px 16px;font-size:13px;width:auto;border-radius:8px}
+/* ═════════ Yuklanish ═════════ */
+#page-loading{align-items:center;justify-content:center;background:var(--ink);gap:22px}
+#page-loading h1{color:#fff;font-size:22px}
+.sheet-logo{display:flex;gap:10px}
+.sheet-logo i{width:34px;height:34px;border-radius:50%;border:3px solid #fff;display:block}
+.sheet-logo i:nth-child(1){animation:fill .5s .1s forwards}
+.sheet-logo i:nth-child(2){animation:fill .5s .55s forwards}
+.sheet-logo i:nth-child(3){animation:fill .5s 1s forwards}
+.sheet-logo i:nth-child(4){animation:fill .5s 1.45s forwards}
+@keyframes fill{to{background:var(--hl);border-color:var(--hl)}}
+#page-error{align-items:center;justify-content:center;text-align:center;padding:32px;gap:12px}
+#page-error .btn{max-width:260px;margin-top:8px}
 
-/* ═══════════════════════════════════════════════
-   FORM ELEMENTS
-═══════════════════════════════════════════════ */
-.form-group{margin-bottom:14px}
-.form-group label{display:block;font-size:13px;color:var(--gray);margin-bottom:6px;font-weight:500}
-.form-group input, .form-group textarea, .form-group select{
-  width:100%;padding:12px 14px;border:1.5px solid #d1d5db;border-radius:10px;font-size:15px;
-  outline:none;transition:border-color .2s;background:#fff;-webkit-user-select:text;user-select:text}
-.form-group input:focus,.form-group textarea:focus{border-color:var(--blue)}
-.form-group textarea{min-height:160px;resize:vertical;font-family:monospace;font-size:13px}
+/* ═════════ O'quvchi bosh sahifa: kod kiritish ═════════ */
+.code-inputs{display:flex;gap:8px;justify-content:space-between;margin:8px 0 14px}
+.code-inputs input{flex:1;min-width:0;max-width:56px;height:64px;border:2px solid var(--ink);border-radius:14px;
+  text-align:center;font:700 24px var(--display);background:#fff;color:var(--ink);outline:none;padding:0;
+  transition:background .12s,color .12s}
+.code-inputs input.filled{background:var(--blue);border-color:var(--blue);color:#fff}
+.code-inputs input:focus{box-shadow:0 0 0 4px var(--hl)}
+.code-inputs.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.hello{margin:8px 0 22px}
+.hello h1{font-size:26px}
+.code-card{background:var(--hl-soft);border:2px solid var(--hl);border-radius:var(--r-card);padding:18px 16px 16px}
+.code-card h3{font-size:16px;margin-bottom:2px}
 
-/* ═══════════════════════════════════════════════
-   LOADING PAGE
-═══════════════════════════════════════════════ */
-#page-loading{align-items:center;justify-content:center;gap:20px;background:var(--blue)}
-.logo-circle{width:100px;height:100px;background:rgba(255,255,255,.2);border-radius:50%;
-  display:flex;align-items:center;justify-content:center;font-size:48px;animation:pulse 1.5s infinite}
-@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
-#page-loading h1{color:#fff;font-size:26px}
-#page-loading p{color:rgba(255,255,255,.8);font-size:14px}
-.spinner{width:36px;height:36px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;
-  border-radius:50%;animation:spin .8s linear infinite}
+/* ═════════ Pastki tab ═════════ */
+#tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;display:none;background:#fff;border-top:1.5px solid var(--line);
+  padding:6px 8px calc(6px + env(safe-area-inset-bottom));justify-content:center;gap:4px}
+#tabbar.show{display:flex}
+#tabbar button{flex:1;max-width:160px;background:none;border:none;border-radius:12px;padding:6px 4px;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:1px;font-size:12px;font-weight:600;color:var(--muted)}
+#tabbar button span{font-size:21px;line-height:1.2}
+#tabbar button.active{color:var(--blue);background:var(--blue-soft)}
+
+/* ═════════ Ro'yxatlar ═════════ */
+.subject-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.subject{background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:14px 6px 12px;text-align:center;
+  cursor:pointer;font-size:12.5px;font-weight:600;transition:border-color .12s,background .12s}
+.subject:active{border-color:var(--blue);background:var(--blue-soft)}
+.subject .ic{font-size:30px;line-height:1.3;display:block}
+
+.item{background:#fff;border:1.5px solid var(--line);border-radius:var(--r-card);padding:14px 16px;margin-bottom:10px}
+.item .name{font-weight:700;font-size:16px;overflow-wrap:anywhere}
+.item .meta{font-size:13px;color:var(--muted);margin-top:2px}
+.code-chip{display:inline-flex;align-items:center;gap:8px;margin-top:10px;padding:8px 12px;border-radius:12px;
+  background:var(--hl-soft);border:1.5px solid var(--hl);font:700 17px var(--display);letter-spacing:.12em;cursor:pointer}
+.code-chip small{font:600 12px var(--font);letter-spacing:0;color:var(--muted)}
+.item .actions{display:flex;gap:8px;margin-top:12px;align-items:center}
+.item .actions .grow{flex:1}
+
+.score-row{display:flex;align-items:center;gap:12px}
+.rank{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:13px;flex-shrink:0}
+.rank.top{background:var(--hl);border-color:var(--hl)}
+.score-row .who{flex:1;min-width:0;font-weight:600;overflow-wrap:anywhere}
+.score-row .pts{font:700 17px var(--display);white-space:nowrap}
+.bar{height:6px;background:var(--line);border-radius:3px;margin-top:10px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:3px}
+.tag{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;background:var(--bad-soft);color:var(--bad);margin-left:6px;vertical-align:1px}
+.summary{display:flex;gap:10px;margin-bottom:12px}
+.summary div{flex:1;background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:10px 14px}
+.summary b{display:block;font:700 22px var(--display)}
+.summary span{font-size:13px;color:var(--muted)}
+
+.empty{text-align:center;padding:48px 24px;color:var(--muted)}
+.empty .ic{font-size:44px;margin-bottom:8px}
+.empty h3{font-size:16px;color:var(--ink);margin-bottom:4px;font-family:var(--font);letter-spacing:0}
+.empty .btn{margin-top:16px;max-width:240px;display:inline-flex}
+.spinner{width:30px;height:30px;border:4px solid var(--line);border-top-color:var(--blue);border-radius:50%;
+  animation:spin .8s linear infinite;margin:40px auto}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* ═══════════════════════════════════════════════
-   SUBJECT GRID
-═══════════════════════════════════════════════ */
-.subject-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:4px}
-.subject-item{background:#fff;border-radius:12px;padding:14px 8px;text-align:center;cursor:pointer;
-  box-shadow:var(--shadow);transition:all .2s;border:2px solid transparent}
-.subject-item:active,.subject-item.selected{border-color:var(--blue);background:#eff6ff}
-.subject-item .icon{font-size:34px;margin-bottom:6px}
-.subject-item .name{font-size:12px;font-weight:600;color:#374151}
+/* ═════════ Savollarni tekshirish ═════════ */
+.tabs{display:flex;background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:3px;margin-bottom:12px}
+.tabs button{flex:1;padding:9px;border:none;background:transparent;border-radius:9px;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer}
+.tabs button.active{background:var(--ink);color:#fff}
+.q-review{background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px}
+.q-review.bad{border-color:var(--bad);background:var(--bad-soft)}
+.q-review .qt{font-weight:600;overflow-wrap:anywhere}
+.q-review ul{list-style:none;margin-top:6px}
+.q-review li{font-size:14px;color:var(--muted);padding:2px 0 2px 22px;position:relative;overflow-wrap:anywhere}
+.q-review li::before{content:"";position:absolute;left:2px;top:8px;width:11px;height:11px;border-radius:50%;border:2px solid var(--line)}
+.q-review li.right{color:var(--ok);font-weight:600}
+.q-review li.right::before{background:var(--ok);border-color:var(--ok)}
+.q-review .why{color:var(--bad);font-size:13px;font-weight:600;margin-top:4px}
+.hint summary{cursor:pointer;font-weight:600;font-size:14px}
+.hint pre{margin-top:10px;background:var(--paper);border-radius:10px;padding:12px;font:13px/1.6 ui-monospace,Menlo,Consolas,monospace;overflow-x:auto;-webkit-user-select:text;user-select:text}
+.hint p{margin-top:8px}
 
-/* ═══════════════════════════════════════════════
-   QUESTION REVIEW
-═══════════════════════════════════════════════ */
-.tabs{display:flex;background:#fff;border-radius:10px;padding:4px;margin-bottom:14px;gap:4px}
-.tab-btn{flex:1;padding:9px;border:none;background:transparent;border-radius:8px;font-size:13px;
-  font-weight:500;cursor:pointer;color:var(--gray)}
-.tab-btn.active{background:var(--blue);color:#fff}
-.q-item{background:#e8f5e9;border-radius:10px;padding:12px;margin-bottom:8px;
-  display:flex;align-items:flex-start;gap:10px}
-.q-item.error{background:#fef2f2}
-.q-item .q-num{color:var(--green);font-size:20px;flex-shrink:0}
-.q-item.error .q-num{color:var(--red)}
-.q-text{font-size:14px;line-height:1.4}
-.q-err{font-size:12px;color:var(--red);margin-top:3px}
+/* ═════════ Test yaratildi ═════════ */
+.created{text-align:center;padding-top:24px}
+.created .big-code{display:inline-block;margin:18px 0 6px;padding:16px 22px;background:var(--hl);border-radius:18px;
+  font:700 38px var(--display);letter-spacing:.14em;padding-left:calc(22px + .14em)}
 
-/* ═══════════════════════════════════════════════
-   CODE DISPLAY
-═══════════════════════════════════════════════ */
-.code-box{background:#f8faff;border:2px dashed var(--blue);border-radius:12px;padding:20px;
-  text-align:center;margin:16px 0}
-.code-box .code{font-size:40px;font-weight:800;letter-spacing:8px;color:var(--blue)}
-.code-box p{font-size:13px;color:var(--gray);margin-top:8px}
-.copy-btn{background:var(--light);border:none;padding:8px 16px;border-radius:8px;
-  font-size:13px;font-weight:600;cursor:pointer;color:var(--blue);margin-top:8px}
+/* ═════════ Test oldi ═════════ */
+.info{display:flex;justify-content:space-between;gap:16px;padding:11px 0;border-bottom:1px solid var(--line);font-size:15px}
+.info:last-child{border:none}
+.info span:first-child{color:var(--muted)}
+.info span:last-child{font-weight:600;text-align:right;overflow-wrap:anywhere}
+.rules{margin-top:6px;padding-left:20px;font-size:14px;line-height:1.7}
 
-/* ═══════════════════════════════════════════════
-   CODE INPUT (6 boxes)
-═══════════════════════════════════════════════ */
-.code-inputs{display:flex;gap:8px;justify-content:center;margin:16px 0}
-.code-inputs input{width:46px;height:56px;border:2px solid #d1d5db;border-radius:10px;
-  text-align:center;font-size:24px;font-weight:700;color:var(--blue);outline:none;
-  -webkit-user-select:text;user-select:text}
-.code-inputs input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(67,97,238,.15)}
-.code-inputs input.filled{border-color:var(--blue);background:#eff6ff}
+/* ═════════ Test yechish ═════════ */
+#page-taking{background:#fff}
+.t-top{position:sticky;top:0;z-index:15;background:#fff;border-bottom:1.5px solid var(--line);padding:10px 16px 8px}
+.t-row{display:flex;align-items:center;gap:10px;justify-content:space-between}
+.t-name{font-weight:700;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.timer{font:700 15px var(--display);background:var(--hl);border-radius:99px;padding:5px 12px;white-space:nowrap;flex-shrink:0}
+.timer.warn{background:var(--bad);color:#fff;animation:blink .8s steps(2) infinite}
+@keyframes blink{50%{opacity:.55}}
+.dots{display:flex;gap:8px;overflow-x:auto;padding:10px 4px 6px;margin:0 -4px;scrollbar-width:none}
+.dots::-webkit-scrollbar{display:none}
+.dot{flex:0 0 auto;width:32px;height:32px;border-radius:50%;border:2px solid var(--line);background:#fff;
+  font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;padding:0}
+.dot.done{background:var(--blue);border-color:var(--blue);color:#fff}
+.dot.cur{border-color:var(--ink);box-shadow:0 0 0 3px var(--hl);color:var(--ink)}
+.dot.done.cur{color:#fff}
+.q-area{padding:22px 16px 24px;max-width:560px;margin:0 auto;width:100%;flex:1}
+.q-count{font-size:13px;color:var(--muted);font-weight:600;margin-bottom:6px}
+.q-text{font-size:19px;font-weight:700;line-height:1.45;margin-bottom:20px;overflow-wrap:anywhere;white-space:pre-line}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:12px 14px;background:#fff;
+  border:2px solid var(--line);border-radius:16px;font-size:16px;cursor:pointer;transition:border-color .1s,background .1s}
+.opt .ltr{width:34px;height:34px;border-radius:50%;border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:14px;flex-shrink:0;transition:background .12s,color .12s}
+.opt .tx{flex:1;overflow-wrap:anywhere}
+.opt.sel{border-color:var(--blue);background:var(--blue-soft)}
+.opt.sel .ltr{background:var(--blue);border-color:var(--blue);color:#fff}
+.t-nav{position:sticky;bottom:0;z-index:15;background:#fff;border-top:1.5px solid var(--line);
+  padding:10px 16px calc(10px + env(safe-area-inset-bottom));display:flex;gap:10px}
+.t-nav .btn{flex:1}
 
-/* ═══════════════════════════════════════════════
-   TEST PREVIEW
-═══════════════════════════════════════════════ */
-.info-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f3f4f6;font-size:14px}
-.info-row:last-child{border:none}
-.info-row .label{color:var(--gray);min-width:80px}
-.info-row .value{font-weight:600;flex:1}
-.time-badge{background:#eff6ff;color:var(--blue);padding:4px 10px;border-radius:20px;
-  font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:5px}
+/* ═════════ Natija ═════════ */
+.result{text-align:center;padding-top:16px}
+.grade{width:104px;height:104px;border-radius:50%;margin:8px auto 14px;display:flex;align-items:center;justify-content:center;
+  font:700 52px var(--display);color:#fff}
+.result .score{font:700 54px var(--display);letter-spacing:-.03em;line-height:1.1}
+.result .score small{font-size:22px;color:var(--muted)}
+.result .verdict{color:var(--muted);margin:6px 0 20px}
+.stats{text-align:left}
+.stats .info b{font-family:var(--display)}
+.notice{margin:12px 0;padding:12px 14px;border-radius:14px;background:var(--bad-soft);color:var(--bad);font-size:14px;font-weight:500;text-align:left}
 
-/* ═══════════════════════════════════════════════
-   TAKING TEST (ANTI-CHEAT PAGE)
-═══════════════════════════════════════════════ */
-#page-taking-test{background:#fff}
-.test-header{background:var(--blue);color:#fff;padding:12px 16px;position:sticky;top:0;z-index:20}
-.test-header .test-name{font-size:16px;font-weight:700}
-.test-header .progress-row{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
-.test-header .q-counter{font-size:13px;opacity:.85}
-.test-header .timer{background:rgba(255,255,255,.2);padding:4px 10px;border-radius:20px;
-  font-size:14px;font-weight:600;display:flex;align-items:center;gap:5px}
-.test-header .timer.warning{background:rgba(239,68,68,.8);animation:blink .6s infinite}
-@keyframes blink{50%{opacity:.6}}
-.progress-bar{height:5px;background:rgba(255,255,255,.3);border-radius:3px;margin-top:8px;overflow:hidden}
-.progress-fill{height:100%;background:#fff;border-radius:3px;transition:width .3s}
+/* ═════════ Profil ═════════ */
+.avatar{width:84px;height:84px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;
+  font:700 34px var(--display);margin:12px auto 12px}
+.p-name{text-align:center;font:700 20px var(--display);overflow-wrap:anywhere}
+.p-role{text-align:center;color:var(--muted);margin:4px 0 20px}
 
-.question-area{padding:20px 16px}
-.question-text{font-size:18px;font-weight:700;line-height:1.5;margin-bottom:20px;color:#1f2937}
-.options-list{display:flex;flex-direction:column;gap:10px}
-.option-btn{background:#f8faff;border:2px solid #e5e7eb;border-radius:12px;padding:14px 16px;
-  text-align:left;font-size:15px;cursor:pointer;transition:all .15s;width:100%;
-  display:flex;align-items:center;gap:12px;color:#1f2937}
-.option-btn:active{opacity:.8}
-.option-btn.selected{background:#eff6ff;border-color:var(--blue);color:var(--blue)}
-.option-letter{width:28px;height:28px;border-radius:50%;background:#e5e7eb;display:flex;
-  align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;
-  color:var(--gray)}
-.option-btn.selected .option-letter{background:var(--blue);color:#fff}
-.nav-buttons{display:flex;gap:10px;padding:16px;position:sticky;bottom:0;background:#fff;
-  border-top:1px solid #f3f4f6}
+/* ═════════ Dialog va toast ═════════ */
+#dialog{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(16,24,40,.6)}
+#dialog.show{display:flex}
+.dlg{background:#fff;border-radius:22px;padding:24px 20px 20px;max-width:340px;width:100%;text-align:center;border-top:6px solid var(--ink)}
+.dlg.warn{border-top-color:var(--hl)}
+.dlg.bad{border-top-color:var(--bad)}
+.dlg .ic{font-size:44px;line-height:1.2}
+.dlg h3{font-size:18px;margin:8px 0 6px}
+.dlg p{color:var(--muted);font-size:14.5px;margin-bottom:18px;overflow-wrap:anywhere}
+.dlg .row{flex-direction:column}
+#toast{position:fixed;left:50%;bottom:calc(var(--tabbar) + 24px + env(safe-area-inset-bottom));transform:translate(-50%,20px);z-index:120;
+  background:var(--ink);color:#fff;padding:11px 18px;border-radius:99px;font-size:14px;font-weight:500;opacity:0;pointer-events:none;
+  transition:opacity .2s,transform .2s;max-width:90vw;text-align:center}
+#toast.show{opacity:1;transform:translate(-50%,0)}
 
-/* ═══════════════════════════════════════════════
-   RESULT PAGE
-═══════════════════════════════════════════════ */
-.result-circle{width:120px;height:120px;border-radius:50%;border:6px solid var(--blue);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;margin:20px auto}
-.result-circle .score{font-size:28px;font-weight:800;color:var(--blue)}
-.result-circle .total{font-size:14px;color:var(--gray)}
-.grade-badge{text-align:center;margin:8px 0 20px}
-.grade-badge .grade{font-size:48px}
-.grade-badge .label{font-size:14px;color:var(--gray)}
-.stat-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f3f4f6;font-size:14px}
-.stat-row:last-child{border:none}
-.stat-row .s-label{color:var(--gray)}
-.stat-row .s-value{font-weight:700}
-.cheat-warning-banner{background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;
-  padding:10px 14px;margin-top:10px;font-size:13px;color:var(--red);display:flex;align-items:center;gap:8px}
-
-/* ═══════════════════════════════════════════════
-   TEACHER TESTS LIST
-═══════════════════════════════════════════════ */
-.test-item{background:#fff;border-radius:12px;padding:14px;margin-bottom:10px;box-shadow:var(--shadow)}
-.test-item .t-name{font-size:15px;font-weight:700}
-.test-item .t-meta{font-size:12px;color:var(--gray);margin-top:4px}
-.test-item .t-code{font-family:monospace;font-size:16px;font-weight:700;color:var(--blue);
-  background:#eff6ff;padding:4px 10px;border-radius:6px;display:inline-block;margin-top:6px}
-.test-item .t-actions{display:flex;gap:8px;margin-top:10px}
-
-/* ═══════════════════════════════════════════════
-   RESULTS LIST
-═══════════════════════════════════════════════ */
-.result-item{background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;box-shadow:var(--shadow)}
-.result-item .r-name{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
-.result-item .r-score{font-size:22px;font-weight:800;color:var(--blue)}
-.result-item .r-info{font-size:12px;color:var(--gray);margin-top:4px}
-.medal{font-size:20px}
-.pct-bar{height:6px;background:#e5e7eb;border-radius:3px;margin-top:8px;overflow:hidden}
-.pct-fill{height:100%;background:var(--blue);border-radius:3px;transition:width .5s}
-
-/* ═══════════════════════════════════════════════
-   PROFILE PAGE
-═══════════════════════════════════════════════ */
-.profile-avatar{width:80px;height:80px;border-radius:50%;background:var(--blue);
-  display:flex;align-items:center;justify-content:center;font-size:36px;margin:20px auto 10px;color:#fff}
-.profile-name{text-align:center;font-size:20px;font-weight:700;margin-bottom:4px}
-.profile-role{text-align:center;font-size:14px;color:var(--gray);margin-bottom:20px}
-
-/* ═══════════════════════════════════════════════
-   ANTI-CHEAT MODALS
-═══════════════════════════════════════════════ */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;
-  align-items:center;justify-content:center;z-index:1000;padding:20px}
-.modal-overlay.show{display:flex}
-.modal{background:#fff;border-radius:16px;padding:24px;max-width:340px;width:100%;text-align:center}
-.modal .m-icon{font-size:56px;margin-bottom:12px}
-.modal h3{font-size:18px;font-weight:700;margin-bottom:8px}
-.modal p{font-size:14px;color:var(--gray);margin-bottom:20px;line-height:1.5}
-.modal-warning{border-top:4px solid var(--amber)}
-.modal-blocked{border-top:4px solid var(--red)}
-.violation-count{font-size:28px;font-weight:800;color:var(--amber);margin:8px 0}
-
-/* ═══════════════════════════════════════════════
-   MISC
-═══════════════════════════════════════════════ */
-.empty-state{text-align:center;padding:40px 20px;color:var(--gray)}
-.empty-state .e-icon{font-size:56px;margin-bottom:12px}
-.empty-state h3{font-size:16px;font-weight:600;margin-bottom:6px;color:#374151}
-.empty-state p{font-size:14px}
-.badge{display:inline-block;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600}
-.badge-green{background:#dcfce7;color:var(--green)}
-.badge-red{background:#fee2e2;color:var(--red)}
-.badge-blue{background:#dbeafe;color:#1d4ed8}
-.section-title{font-size:13px;color:var(--gray);font-weight:600;margin:16px 0 8px;text-transform:uppercase;letter-spacing:.5px}
-.hero{background:var(--blue);color:#fff;padding:24px 20px;border-radius:16px;margin-bottom:16px}
-.hero h2{font-size:22px;font-weight:800;margin-bottom:6px}
-.hero p{font-size:14px;opacity:.85}
-hr{border:none;border-top:1px solid #f3f4f6;margin:12px 0}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.sheet-logo i{background:var(--hl);border-color:var(--hl)}}
 </style>
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════
-     PAGES
-═══════════════════════════════════════ -->
-
-<!-- LOADING -->
+<!-- ═════════ Yuklanish / xato ═════════ -->
 <div id="page-loading" class="page active">
-  <div class="logo-circle">🎓</div>
+  <div class="sheet-logo" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
   <h1>Online Test</h1>
-  <p>O'qituvchi va o'quvchi platformasi</p>
-  <div class="spinner" style="margin-top:20px"></div>
 </div>
 
-<!-- REGISTER: NAME -->
-<div id="page-reg-name" class="page">
-  <div class="header"><h2>Ro'yxatdan o'tish</h2></div>
-  <div class="content">
-    <div class="card" style="margin-top:16px">
-      <div style="text-align:center;margin-bottom:20px">
-        <div style="font-size:56px">👤</div>
-        <h3 style="margin-top:8px">Ismingizni kiriting</h3>
-        <p style="font-size:13px;color:var(--gray);margin-top:4px">To'liq ism-familiya (Sharifi ham)</p>
-      </div>
-      <div class="form-group">
-        <label>To'liq ism-familiya</label>
-        <input type="text" id="inp-fullname" placeholder="Karimov Jasur Aliyevich" autocomplete="off">
-      </div>
-      <div id="reg-name-err" style="color:var(--red);font-size:13px;margin-bottom:10px;display:none"></div>
-      <button class="btn btn-primary" onclick="App.regSubmitName()">Davom etish →</button>
+<div id="page-error" class="page">
+  <div style="font-size:48px">📵</div>
+  <h2 id="error-title">Ulanib bo'lmadi</h2>
+  <p class="muted" id="error-text"></p>
+  <button class="btn" onclick="location.reload()">Qayta urinish</button>
+</div>
+
+<!-- ═════════ Ro'yxatdan o'tish ═════════ -->
+<div id="page-register" class="page">
+  <div class="content" style="padding-top:36px">
+    <h1 class="title">Tanishib olaylik</h1>
+    <p class="lead">Natijalarda ismingiz ko'rinadi.</p>
+    <div class="field">
+      <label for="inp-fullname">Ism va familiya</label>
+      <input type="text" id="inp-fullname" placeholder="Karimov Jasur" autocomplete="name" maxlength="80">
     </div>
+    <div class="field">
+      <label for="inp-phone">Telefon raqam</label>
+      <input type="tel" id="inp-phone" placeholder="+998 90 123 45 67" autocomplete="tel" maxlength="20">
+    </div>
+    <div class="err" id="reg-err"></div>
+    <button class="btn" onclick="App.regNext()">Davom etish</button>
   </div>
 </div>
 
-<!-- REGISTER: PHONE -->
-<div id="page-reg-phone" class="page">
-  <div class="header"><h2>Telefon raqam</h2></div>
+<div id="page-role" class="page" data-parent="register">
+  <div class="header"><button class="back" onclick="App.back()" aria-label="Orqaga">←</button><h2>Siz kimsiz?</h2></div>
   <div class="content">
-    <div class="card" style="margin-top:16px">
-      <div style="text-align:center;margin-bottom:20px">
-        <div style="font-size:56px">📱</div>
-        <h3 style="margin-top:8px">Telefon raqamingiz</h3>
-      </div>
-      <div class="form-group">
-        <label>Telefon raqam</label>
-        <input type="tel" id="inp-phone" placeholder="+998901234567" autocomplete="off">
-      </div>
-      <div id="reg-phone-err" style="color:var(--red);font-size:13px;margin-bottom:10px;display:none"></div>
-      <button class="btn btn-primary" onclick="App.regSubmitPhone()">Davom etish →</button>
-    </div>
-  </div>
-</div>
-
-<!-- REGISTER: ROLE -->
-<div id="page-select-role" class="page">
-  <div class="header"><h2>Rolingizni tanlang</h2></div>
-  <div class="content">
-    <div style="margin-top:16px;display:flex;flex-direction:column;gap:14px">
-      <div class="card" onclick="App.selectRole('teacher')" style="cursor:pointer;border:2px solid transparent;transition:all .2s" id="role-teacher-card">
-        <div style="text-align:center;padding:16px 0">
-          <div style="font-size:56px">👨‍🏫</div>
-          <h3 style="margin-top:10px;font-size:18px">O'qituvchi</h3>
-          <p style="font-size:13px;color:var(--gray);margin-top:6px">Test yaratish, natijalarni kuzatish</p>
-        </div>
-      </div>
-      <div class="card" onclick="App.selectRole('student')" style="cursor:pointer;border:2px solid transparent;transition:all .2s" id="role-student-card">
-        <div style="text-align:center;padding:16px 0">
-          <div style="font-size:56px">👨‍🎓</div>
-          <h3 style="margin-top:10px;font-size:18px">O'quvchi</h3>
-          <p style="font-size:13px;color:var(--gray);margin-top:6px">Test yechish, natijalar ko'rish</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- TEACHER HOME -->
-<div id="page-teacher-home" class="page">
-  <div class="content" style="padding-top:20px">
-    <div class="hero">
-      <h2 id="teacher-welcome">Xush kelibsiz!</h2>
-      <p>O'quvchilar uchun test yarating</p>
-    </div>
-    <button class="btn btn-primary" style="margin-bottom:12px" onclick="App.goto('select-subject')">
-      ➕ &nbsp;Test yaratish
+    <p class="lead">Rolni keyinroq profilda almashtirish mumkin.</p>
+    <button class="card item" style="width:100%;text-align:left;cursor:pointer;padding:18px" onclick="App.pickRole('teacher')">
+      <div class="name" style="font-size:18px">👨‍🏫 O'qituvchi</div>
+      <div class="meta">Test yarating, kod bering va natijalarni ko'ring</div>
     </button>
-    <button class="btn btn-outline" onclick="App.loadTeacherTests()">
-      📋 &nbsp;Mening testlarim
+    <button class="card item" style="width:100%;text-align:left;cursor:pointer;padding:18px" onclick="App.pickRole('student')">
+      <div class="name" style="font-size:18px">🎓 O'quvchi</div>
+      <div class="meta">Kod bilan testni yeching va bahoingizni biling</div>
     </button>
   </div>
-  <div class="bottom-nav">
-    <button onclick="App.goto('teacher-home')" class="active"><span>🏠</span>Bosh</button>
-    <button onclick="App.loadTeacherTests()"><span>📋</span>Testlar</button>
-    <button onclick="App.showProfile()"><span>👤</span>Profil</button>
+</div>
+
+<!-- ═════════ O'qituvchi ═════════ -->
+<div id="page-teacher-home" class="page tabbed" data-tabs="1">
+  <div class="content">
+    <div class="hello"><h1 id="teacher-hello">Salom!</h1></div>
+    <button class="btn" onclick="App.go('subject')" style="margin-bottom:20px">＋ Yangi test</button>
+    <div id="tests-list"><div class="spinner"></div></div>
   </div>
 </div>
 
-<!-- SELECT SUBJECT -->
-<div id="page-select-subject" class="page">
-  <div class="header">
-    <button class="back" onclick="App.goto('teacher-home')">←</button>
-    <h2>Fanni tanlang</h2>
-  </div>
-  <div class="content">
-    <div class="subject-grid" id="subject-grid"></div>
-  </div>
+<div id="page-subject" class="page" data-parent="teacher-home">
+  <div class="header"><button class="back" onclick="App.back()" aria-label="Orqaga">←</button><h2>Qaysi fandan?</h2></div>
+  <div class="content"><div class="subject-grid" id="subject-grid"></div></div>
 </div>
 
-<!-- ENTER QUESTIONS -->
-<div id="page-enter-questions" class="page">
-  <div class="header">
-    <button class="back" onclick="App.goto('select-subject')">←</button>
-    <h2 id="eq-subject-title">Savollar</h2>
-  </div>
+<div id="page-questions" class="page" data-parent="subject">
+  <div class="header"><button class="back" onclick="App.back()" aria-label="Orqaga">←</button><h2 id="q-title">Savollar</h2></div>
   <div class="content">
-    <div class="card">
-      <h3>⚠️ Format</h3>
-      <pre style="font-size:12px;background:#f9fafb;padding:12px;border-radius:8px;margin-top:8px;line-height:1.6;overflow-x:auto;-webkit-user-select:text;user-select:text">?O'zbekiston poytaxti qayer?
+    <div class="field">
+      <label for="inp-test-name">Test nomi</label>
+      <input type="text" id="inp-test-name" placeholder="Masalan: Mexanika, 1-bob" maxlength="100">
+    </div>
+    <div class="field">
+      <label for="inp-time-limit">Vaqt</label>
+      <select id="inp-time-limit">
+        <option value="0">Cheklanmagan</option>
+        <option value="10">10 daqiqa</option><option value="15">15 daqiqa</option>
+        <option value="20">20 daqiqa</option><option value="30">30 daqiqa</option>
+        <option value="45">45 daqiqa</option><option value="60">1 soat</option>
+        <option value="90">1,5 soat</option><option value="120">2 soat</option>
+      </select>
+    </div>
+    <details class="card hint" style="margin-bottom:14px">
+      <summary>Savollar qanday yoziladi?</summary>
+      <pre>?O'zbekiston poytaxti qayer?
 -Buxoro
 -Samarqand
 +Toshkent
@@ -379,940 +332,671 @@ hr{border:none;border-top:1px solid #f3f4f6;margin:12px 0}
 -3
 +4
 -5</pre>
-      <p style="font-size:12px;color:var(--gray);margin-top:8px"><b>+</b> = to'g'ri javob &nbsp;|&nbsp; <b>-</b> = noto'g'ri javob</p>
+      <p class="small muted"><b>?</b> savol, <b>+</b> to'g'ri javob (faqat bitta), <b>-</b> noto'g'ri javob. Uzun matn keyingi qatorga o'tishi mumkin.</p>
+    </details>
+    <div class="field">
+      <label for="inp-questions">Savollar</label>
+      <textarea id="inp-questions" placeholder="?Savol matni&#10;-Variant&#10;+To'g'ri variant&#10;-Variant" autocapitalize="off" spellcheck="false"></textarea>
     </div>
-    <div class="form-group">
-      <label>Savollarni kiriting</label>
-      <textarea id="inp-questions" placeholder="?Savol matni?&#10;-Javob 1&#10;+To'g'ri javob&#10;-Javob 3"></textarea>
-    </div>
-    <button class="btn btn-primary" onclick="App.parseQuestions()">Tekshirish →</button>
+    <div class="err" id="q-err"></div>
+    <button class="btn" id="btn-parse" onclick="App.parse()">Savollarni tekshirish</button>
   </div>
 </div>
 
-<!-- REVIEW QUESTIONS -->
-<div id="page-review-questions" class="page">
-  <div class="header">
-    <button class="back" onclick="App.goto('enter-questions')">←</button>
-    <h2>Savollarni tekshirish</h2>
-  </div>
+<div id="page-review" class="page" data-parent="questions">
+  <div class="header"><button class="back" onclick="App.back()" aria-label="Orqaga">←</button><h2>Tekshiruv</h2></div>
   <div class="content">
     <div class="tabs">
-      <button class="tab-btn active" id="tab-ok" onclick="App.switchTab('ok')">✅ Qabul (<span id="ok-count">0</span>)</button>
-      <button class="tab-btn" id="tab-err" onclick="App.switchTab('err')">❌ Xato (<span id="err-count">0</span>)</button>
+      <button id="tab-ok" class="active" onclick="App.tab('ok')">Qabul (<span id="ok-count">0</span>)</button>
+      <button id="tab-err" onclick="App.tab('err')">Xato (<span id="err-count">0</span>)</button>
     </div>
     <div id="list-ok"></div>
     <div id="list-err" style="display:none"></div>
-    <div style="display:flex;gap:10px;margin-top:16px">
-      <button class="btn btn-gray" style="flex:1" onclick="App.goto('enter-questions')">Bekor qilish</button>
-      <button class="btn btn-primary" style="flex:1" id="btn-save-questions" onclick="App.gotoTestInfo()">Saqlash →</button>
+    <div class="err" id="review-err"></div>
+    <div class="row" style="margin-top:16px">
+      <button class="btn btn-outline" onclick="App.back()">Tahrirlash</button>
+      <button class="btn" id="btn-create" onclick="App.createTest()">Testni yaratish</button>
     </div>
   </div>
 </div>
 
-<!-- TEST INFO -->
-<div id="page-test-info" class="page">
-  <div class="header">
-    <button class="back" onclick="App.goto('review-questions')">←</button>
-    <h2>Test ma'lumotlari</h2>
+<div id="page-created" class="page">
+  <div class="content created">
+    <div style="font-size:44px">✅</div>
+    <h1 class="title" id="created-name" style="margin-top:6px;overflow-wrap:anywhere"></h1>
+    <p class="muted" id="created-meta"></p>
+    <div class="big-code" id="created-code">000000</div>
+    <p class="muted small" style="margin-bottom:20px">Shu kodni o'quvchilarga yuboring</p>
+    <button class="btn" onclick="App.copy(document.getElementById('created-code').textContent)" style="margin-bottom:10px">Kodni nusxalash</button>
+    <button class="btn btn-outline" onclick="App.go('teacher-home')">Testlarimga qaytish</button>
   </div>
+</div>
+
+<div id="page-test-results" class="page" data-parent="teacher-home">
+  <div class="header"><button class="back" onclick="App.back()" aria-label="Orqaga">←</button><h2 id="results-title">Natijalar</h2></div>
+  <div class="content" id="results-list"><div class="spinner"></div></div>
+</div>
+
+<!-- ═════════ O'quvchi ═════════ -->
+<div id="page-student-home" class="page tabbed" data-tabs="1">
   <div class="content">
-    <div class="card">
-      <div class="form-group">
-        <label>Test nomi</label>
-        <input type="text" id="inp-test-name" placeholder="Mexanika, Algebra 1-bob...">
-      </div>
-      <div class="form-group">
-        <label>Vaqt chegarasi</label>
-        <select id="inp-time-limit">
-          <option value="0">Vaqtsiz</option>
-          <option value="15">15 daqiqa</option>
-          <option value="20">20 daqiqa</option>
-          <option value="30">30 daqiqa</option>
-          <option value="45">45 daqiqa</option>
-          <option value="60">1 soat</option>
-          <option value="90">1,5 soat</option>
-          <option value="120">2 soat</option>
-        </select>
-      </div>
-      <div id="test-info-err" style="color:var(--red);font-size:13px;margin-bottom:10px;display:none"></div>
-      <button class="btn btn-primary" onclick="App.createTest()">💾 &nbsp;Testni saqlash</button>
-    </div>
-  </div>
-</div>
-
-<!-- TEST CREATED -->
-<div id="page-test-created" class="page">
-  <div class="header"><h2>Test yaratildi! 🎉</h2></div>
-  <div class="content">
-    <div class="card" style="text-align:center;margin-top:20px">
-      <div style="font-size:48px;margin-bottom:12px">🎯</div>
-      <h3 id="created-test-name"></h3>
-      <p style="font-size:13px;color:var(--gray);margin-top:4px" id="created-test-meta"></p>
-      <div class="code-box">
-        <div class="code" id="created-code">------</div>
-        <p>O'quvchilarga shu kodni yuboring</p>
-        <button class="copy-btn" onclick="App.copyCode()">📋 Nusxa olish</button>
-      </div>
-      <button class="btn btn-primary" onclick="App.goto('teacher-home')">🏠 &nbsp;Bosh sahifaga</button>
-    </div>
-  </div>
-</div>
-
-<!-- MY TESTS (TEACHER) -->
-<div id="page-my-tests" class="page">
-  <div class="header">
-    <button class="back" onclick="App.goto('teacher-home')">←</button>
-    <h2>Mening testlarim</h2>
-  </div>
-  <div class="content" id="my-tests-list">
-    <div class="empty-state"><div class="spinner"></div></div>
-  </div>
-</div>
-
-<!-- TEST RESULTS (teacher sees) -->
-<div id="page-test-results" class="page">
-  <div class="header">
-    <button class="back" onclick="App.goto('my-tests')">←</button>
-    <h2 id="results-test-name">Natijalar</h2>
-  </div>
-  <div class="content" id="test-results-list">
-    <div class="empty-state"><div class="spinner"></div></div>
-  </div>
-</div>
-
-<!-- ───────────── STUDENT PAGES ───────────── -->
-
-<!-- STUDENT HOME -->
-<div id="page-student-home" class="page">
-  <div class="content" style="padding-top:20px">
-    <div class="hero">
-      <h2 id="student-welcome">Xush kelibsiz!</h2>
-      <p>Test kodi bilan testni yeching</p>
-    </div>
-    <button class="btn btn-primary" style="margin-bottom:12px" onclick="App.goto('enter-code')">
-      📝 &nbsp;Test yechish
-    </button>
-    <button class="btn btn-outline" onclick="App.loadStudentResults()">
-      📈 &nbsp;Mening natijalarim
-    </button>
-  </div>
-  <div class="bottom-nav">
-    <button onclick="App.goto('student-home')" class="active"><span>🏠</span>Bosh</button>
-    <button onclick="App.loadStudentResults()"><span>📈</span>Natijalar</button>
-    <button onclick="App.showProfile()"><span>👤</span>Profil</button>
-  </div>
-</div>
-
-<!-- ENTER CODE -->
-<div id="page-enter-code" class="page">
-  <div class="header">
-    <button class="back" onclick="App.goto('student-home')">←</button>
-    <h2>Test kodi</h2>
-  </div>
-  <div class="content">
-    <div class="card" style="margin-top:16px;text-align:center">
-      <div style="font-size:48px;margin-bottom:12px">🔢</div>
-      <h3>Test kodini kiriting</h3>
-      <p style="font-size:13px;color:var(--gray);margin-top:4px">O'qituvchi bergan 6 xonali kod</p>
+    <div class="hello"><h1 id="student-hello">Salom!</h1></div>
+    <div class="code-card">
+      <h3>Test kodi</h3>
+      <p class="small muted">O'qituvchi bergan 6 ta raqam</p>
       <div class="code-inputs" id="code-inputs">
-        <input type="number" maxlength="1" class="code-digit" data-idx="0">
-        <input type="number" maxlength="1" class="code-digit" data-idx="1">
-        <input type="number" maxlength="1" class="code-digit" data-idx="2">
-        <input type="number" maxlength="1" class="code-digit" data-idx="3">
-        <input type="number" maxlength="1" class="code-digit" data-idx="4">
-        <input type="number" maxlength="1" class="code-digit" data-idx="5">
+        <input inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="one-time-code" aria-label="1-raqam">
+        <input inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="2-raqam">
+        <input inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="3-raqam">
+        <input inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="4-raqam">
+        <input inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="5-raqam">
+        <input inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="6-raqam">
       </div>
-      <div id="code-err" style="color:var(--red);font-size:13px;margin-bottom:10px;display:none"></div>
-      <button class="btn btn-primary" onclick="App.searchTest()">🔍 &nbsp;Qidirish</button>
+      <div class="err" id="code-err"></div>
+      <button class="btn" id="btn-find" onclick="App.findTest()">Testni topish</button>
     </div>
   </div>
 </div>
 
-<!-- TEST PREVIEW -->
-<div id="page-test-preview" class="page">
-  <div class="header">
-    <button class="back" onclick="App.goto('enter-code')">←</button>
-    <h2>Test ma'lumotlari</h2>
-  </div>
+<div id="page-preview" class="page" data-parent="student-home">
+  <div class="header"><button class="back" onclick="App.back()" aria-label="Orqaga">←</button><h2>Test haqida</h2></div>
   <div class="content">
-    <div class="card">
-      <h3 id="preview-name" style="font-size:20px"></h3>
-      <div style="margin-top:12px">
-        <div class="info-row"><span class="label">📚 Fan</span><span class="value" id="preview-subject"></span></div>
-        <div class="info-row"><span class="label">👨‍🏫 O'qituvchi</span><span class="value" id="preview-teacher"></span></div>
-        <div class="info-row"><span class="label">❓ Savollar</span><span class="value" id="preview-count"></span></div>
-        <div class="info-row"><span class="label">⏱️ Vaqt</span><span class="value" id="preview-time"></span></div>
-      </div>
+    <h1 class="title" id="pv-name" style="font-size:22px;overflow-wrap:anywhere"></h1>
+    <div class="card" style="margin-top:12px">
+      <div class="info"><span>Fan</span><span id="pv-subject"></span></div>
+      <div class="info"><span>O'qituvchi</span><span id="pv-teacher"></span></div>
+      <div class="info"><span>Savollar</span><span id="pv-count"></span></div>
+      <div class="info"><span>Vaqt</span><span id="pv-time"></span></div>
     </div>
-    <div class="card" style="background:#fefce8;border:1px solid #fde68a">
-      <h3 style="color:var(--amber)">⚠️ Anti-cheat tizimi</h3>
-      <ul style="margin-top:8px;padding-left:18px;font-size:13px;color:#374151;line-height:1.8">
-        <li>Boshqa dasturga o'tsangiz — ogohlantirilasiz</li>
-        <li>3 marta buzilsa — test avtomatik topshiriladi</li>
-        <li>Nusxa ko'chirish va menyu o'chirilgan</li>
-        <li>Test ichida orqaga qaytib bo'lmaydi</li>
+    <div class="card" style="background:var(--hl-soft);border-color:var(--hl)">
+      <b>Boshlashdan oldin</b>
+      <ul class="rules">
+        <li>Testni faqat bir marta yechish mumkin</li>
+        <li>Ilovadan chiqib ketsangiz ogohlantirish beriladi, 3-marta test avtomatik topshiriladi</li>
+        <li>Ilovani yopsangiz ham vaqt to'xtamaydi</li>
       </ul>
     </div>
-    <button class="btn btn-primary" onclick="App.startTest()">▶️ &nbsp;Testni boshlash</button>
+    <div class="err" id="pv-err"></div>
+    <button class="btn" id="btn-start" onclick="App.startTest()">Boshlash</button>
   </div>
 </div>
 
-<!-- TAKING TEST (ANTI-CHEAT) -->
-<div id="page-taking-test" class="page">
-  <div class="test-header">
-    <div class="test-name" id="taking-test-name">Test</div>
-    <div class="progress-row">
-      <span class="q-counter" id="q-counter">1 / 10</span>
-      <span class="timer" id="test-timer" style="display:none">⏱ --:--</span>
+<div id="page-taking" class="page">
+  <div class="t-top">
+    <div class="t-row"><div class="t-name" id="t-name">Test</div><div class="timer" id="t-timer" style="display:none">--:--</div></div>
+    <div class="dots" id="t-dots" role="tablist"></div>
+  </div>
+  <div class="q-area">
+    <div class="q-count" id="q-count"></div>
+    <div class="q-text" id="q-text"></div>
+    <div class="opts" id="q-opts"></div>
+  </div>
+  <div class="t-nav">
+    <button class="btn btn-outline" id="btn-prev" onclick="Test.move(-1)">Oldingi</button>
+    <button class="btn" id="btn-next" onclick="Test.move(1)">Keyingi</button>
+    <button class="btn btn-ok" id="btn-submit" onclick="Test.submit()" style="display:none">Topshirish</button>
+  </div>
+</div>
+
+<div id="page-result" class="page">
+  <div class="content result">
+    <div class="grade" id="res-grade">5</div>
+    <div class="score"><span id="res-score">0</span><small> / <span id="res-total">0</span></small></div>
+    <p class="verdict" id="res-verdict"></p>
+    <div class="card stats">
+      <div class="info"><span>To'g'ri</span><b id="res-correct" style="color:var(--ok)"></b></div>
+      <div class="info"><span>Noto'g'ri yoki javobsiz</span><b id="res-wrong" style="color:var(--bad)"></b></div>
+      <div class="info"><span>Foiz</span><b id="res-pct"></b></div>
     </div>
-    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
-  </div>
-  <div class="question-area" id="question-area">
-    <div class="question-text" id="q-text"></div>
-    <div class="options-list" id="options-list"></div>
-  </div>
-  <div class="nav-buttons">
-    <button class="btn btn-gray" style="flex:1" id="btn-prev" onclick="App.prevQuestion()" style="display:none">← Oldingi</button>
-    <button class="btn btn-primary" style="flex:1" id="btn-next" onclick="App.nextQuestion()">Keyingi →</button>
-    <button class="btn btn-success" style="flex:1;display:none" id="btn-submit" onclick="App.submitTest()">✅ Topshirish</button>
+    <div class="notice" id="res-notice" style="display:none"></div>
+    <button class="btn" onclick="App.go('student-home')" style="margin-top:8px">Bosh sahifa</button>
   </div>
 </div>
 
-<!-- TEST RESULT (student) -->
-<div id="page-test-result" class="page">
-  <div class="header"><h2>Natija</h2></div>
+<div id="page-student-results" class="page tabbed" data-tabs="1">
   <div class="content">
-    <div class="card" style="text-align:center;margin-top:12px">
-      <div class="result-circle">
-        <div class="score" id="res-score">0</div>
-        <div class="total" id="res-total">/ 0</div>
-      </div>
-      <div class="grade-badge">
-        <div class="grade" id="res-grade">🏆</div>
-        <div class="label" id="res-comment">Ajoyib!</div>
-      </div>
-      <div class="card" style="text-align:left;box-shadow:none;border:1px solid #f3f4f6">
-        <div class="stat-row"><span class="s-label">✅ To'g'ri</span><span class="s-value" id="res-correct" style="color:var(--green)">0</span></div>
-        <div class="stat-row"><span class="s-label">❌ Noto'g'ri</span><span class="s-value" id="res-wrong" style="color:var(--red)">0</span></div>
-        <div class="stat-row"><span class="s-label">📊 Foiz</span><span class="s-value" id="res-pct">0%</span></div>
-      </div>
-      <div id="cheat-banner" class="cheat-warning-banner" style="display:none">
-        ⚠️ <span id="cheat-banner-text"></span>
-      </div>
-    </div>
-    <button class="btn btn-primary" onclick="App.goto('student-home')">🏠 &nbsp;Bosh sahifaga</button>
+    <div class="hello"><h1>Natijalarim</h1></div>
+    <div id="my-results"><div class="spinner"></div></div>
   </div>
 </div>
 
-<!-- STUDENT RESULTS -->
-<div id="page-student-results" class="page">
-  <div class="header">
-    <button class="back" onclick="App.goto('student-home')">←</button>
-    <h2>Mening natijalarim</h2>
-  </div>
-  <div class="content" id="student-results-list">
-    <div class="empty-state"><div class="spinner"></div></div>
-  </div>
-</div>
-
-<!-- PROFILE -->
-<div id="page-profile" class="page">
-  <div class="header"><h2>Profil</h2></div>
+<!-- ═════════ Profil ═════════ -->
+<div id="page-profile" class="page tabbed" data-tabs="1">
   <div class="content">
-    <div class="profile-avatar" id="profile-avatar">👤</div>
-    <div class="profile-name" id="profile-name">-</div>
-    <div class="profile-role" id="profile-role">-</div>
-    <div class="card" id="profile-stats"></div>
+    <div class="avatar" id="p-avatar">?</div>
+    <div class="p-name" id="p-name"></div>
+    <div class="p-role" id="p-role"></div>
     <div class="card">
-      <div style="font-size:13px;color:var(--gray);margin-bottom:12px">Rolni o'zgartirish</div>
-      <button class="btn btn-outline" onclick="App.changeRole()">🔄 &nbsp;Rolni almashtirish</button>
+      <div class="info"><span>Telefon</span><span id="p-phone"></span></div>
     </div>
-  </div>
-  <div class="bottom-nav" id="profile-bottom-nav"></div>
-</div>
-
-<!-- ═══════════════════════════════════════
-     ANTI-CHEAT MODALS
-═══════════════════════════════════════ -->
-<div class="modal-overlay" id="modal-warning">
-  <div class="modal modal-warning">
-    <div class="m-icon">⚠️</div>
-    <h3>Ogohlantirish!</h3>
-    <p>Testdan tashqariga chiqdingiz.<br>Buni takrorlashdan saqlaning!</p>
-    <div class="violation-count"><span id="warn-count">1</span> / 3</div>
-    <p style="font-size:12px">3 martadan keyin test avtomatik topshiriladi</p>
-    <button class="btn btn-primary" onclick="App.closeWarning()">Davom etaman</button>
+    <button class="btn btn-outline" onclick="App.changeRole()" id="btn-role"></button>
   </div>
 </div>
 
-<div class="modal-overlay" id="modal-blocked">
-  <div class="modal modal-blocked">
-    <div class="m-icon">🚫</div>
-    <h3>Test to'xtatildi!</h3>
-    <p>Siz 3 marta testdan tashqariga chiqdiingiz. Test avtomatik topshirildi.</p>
-    <button class="btn btn-danger" onclick="App.forceSubmit()">OK — Natijani ko'rish</button>
-  </div>
-</div>
+<nav id="tabbar" aria-label="Asosiy menyu"></nav>
+<div id="dialog" role="dialog" aria-modal="true"><div class="dlg" id="dlg"></div></div>
+<div id="toast" role="status" aria-live="polite"></div>
 
-<!-- ═══════════════════════════════════════
-     JAVASCRIPT
-═══════════════════════════════════════ -->
 <script>
-// ════════════════════════════════════════
-// TELEGRAM WEBAPP INIT
-// ════════════════════════════════════════
-const tg = window.Telegram.WebApp;
-tg.ready();
-tg.expand();
-tg.disableVerticalSwipes && tg.disableVerticalSwipes();
+// ═════════ Telegram ═════════
+const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : {
+  initData:'', ready(){}, expand(){}, BackButton:{show(){},hide(){},onClick(){}}, HapticFeedback:null
+};
+tg.ready(); tg.expand();
+try { tg.disableVerticalSwipes && tg.disableVerticalSwipes(); } catch(e){}
+try { tg.setHeaderColor && tg.setHeaderColor('#F4F6FA'); tg.setBackgroundColor && tg.setBackgroundColor('#F4F6FA'); } catch(e){}
+const DEV_ID = new URLSearchParams(location.search).get('dev');   // faqat server DEV_MODE=1 bo'lsa ishlaydi
 
-const TG_USER = tg.initDataUnsafe?.user || { id: Date.now(), first_name: 'Test' };
-const API = window.location.origin;
-
-// ════════════════════════════════════════
-// SUBJECTS
-// ════════════════════════════════════════
+// ═════════ Yordamchilar ═════════
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const LETTERS = 'ABCDEFGH';
 const SUBJECTS = [
-  {id:'fizika',    name:'Fizika',       icon:'⚛️'},
-  {id:'matematika',name:'Matematika',   icon:'➕'},
-  {id:'kimyo',     name:'Kimyo',        icon:'🔬'},
-  {id:'chet-tili', name:'Chet tili',    icon:'🌐'},
-  {id:'informatika',name:'Informatika', icon:'💻'},
-  {id:'biologiya', name:'Biologiya',    icon:'🧬'},
-  {id:'tarix',     name:'Tarix',        icon:'🏛️'},
-  {id:'musiqa',    name:'Musiqa',       icon:'🎵'},
-  {id:'iqtisod',   name:'Iqtisod',      icon:'💰'},
-  {id:'geografiya',name:'Geografiya',   icon:'🌍'},
-  {id:'astronomiya',name:'Astronomiya', icon:'🪐'},
-  {id:'ona-tili',  name:'Ona tili',     icon:'📖'},
-  {id:'adabiyot',  name:'Adabiyot',     icon:'📚'},
-  {id:'jismoniy',  name:'Jismoniy',     icon:'🏃'},
-  {id:'tasviriy',  name:'Tasviriy san\'at',icon:'🎨'},
+  ['Fizika','⚛️'],['Matematika','➕'],['Kimyo','🔬'],['Chet tili','🌐'],['Informatika','💻'],
+  ['Biologiya','🧬'],['Tarix','🏛️'],['Musiqa','🎵'],['Iqtisod','💰'],['Geografiya','🌍'],
+  ['Astronomiya','🪐'],['Ona tili','📖'],['Adabiyot','📚'],['Jismoniy tarbiya','🏃'],['Tasviriy san\'at','🎨'],
 ];
+const haptic = t => { try { tg.HapticFeedback && tg.HapticFeedback.notificationOccurred(t); } catch(e){} };
 
-// ════════════════════════════════════════
-// STATE
-// ════════════════════════════════════════
-const State = {
-  user: null,
-  creating: { subject: null, questions: [], errors: [], name: '', time: 0 },
-  solving: {
-    test: null, questions: [], answers: [],
-    current: 0, timer: null, timeLeft: 0,
-    cheatingCount: 0, submitted: false
-  },
-  viewTestId: null,
-};
+function gradeInfo(pct){
+  if (pct >= 86) return {num:'5', label:"Ajoyib natija", color:'#0E9F6E'};
+  if (pct >= 71) return {num:'4', label:"Yaxshi natija", color:'#2438D6'};
+  if (pct >= 56) return {num:'3', label:"Qoniqarli natija", color:'#B54708'};
+  return {num:'2', label:"Yana mashq qiling", color:'#D92D20'};
+}
+const pctOf = (s,t) => t ? Math.round(s/t*100) : 0;
+function fmtTime(sec){ sec = Math.max(0, sec); return String(Math.floor(sec/60)).padStart(2,'0') + ':' + String(sec%60).padStart(2,'0'); }
+// Server vaqti UTC da: foydalanuvchining mahalliy vaqtiga o'tkazamiz
+function fmtDate(s){
+  if (!s) return '';
+  const d = new Date(s.replace(' ','T') + 'Z');
+  if (isNaN(d)) return s.slice(0,16);
+  const p = n => String(n).padStart(2,'0');
+  return `${p(d.getDate())}.${p(d.getMonth()+1)}.${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function showErr(id, msg){ const el = $(id); el.textContent = msg || ''; el.classList.toggle('show', !!msg); }
+function busy(btn, on, label){ btn.disabled = on; if (label !== undefined) btn.textContent = label; }
 
-// ════════════════════════════════════════
-// ANTI-CHEAT
-// ════════════════════════════════════════
-const AntiCheat = {
-  active: false,
-  violations: 0,
-  maxV: 3,
-  _handlers: {},
+let toastTimer;
+function toast(msg){
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
 
-  start() {
-    this.active = true;
-    this.violations = 0;
-
-    this._handlers.ctx = e => e.preventDefault();
-    this._handlers.copy = e => e.preventDefault();
-    this._handlers.cut = e => e.preventDefault();
-    this._handlers.key = e => {
-      const blocked = ['F12','F11','F10'];
-      if (blocked.includes(e.key)) { e.preventDefault(); return; }
-      if (e.ctrlKey && ['c','v','a','s','u','p','i'].includes(e.key.toLowerCase())) e.preventDefault();
-      if (e.ctrlKey && e.shiftKey && ['i','j','c'].includes(e.key.toLowerCase())) e.preventDefault();
-    };
-    this._handlers.vis = () => {
-      if (document.hidden && this.active) this._violation();
-    };
-    this._handlers.blur = () => {
-      if (this.active) this._violation();
-    };
-
-    document.addEventListener('contextmenu', this._handlers.ctx);
-    document.addEventListener('copy', this._handlers.copy);
-    document.addEventListener('cut', this._handlers.cut);
-    document.addEventListener('keydown', this._handlers.key);
-    document.addEventListener('visibilitychange', this._handlers.vis);
-    window.addEventListener('blur', this._handlers.blur);
-
-    tg.enableClosingConfirmation && tg.enableClosingConfirmation();
-  },
-
-  stop() {
-    this.active = false;
-    document.removeEventListener('contextmenu', this._handlers.ctx);
-    document.removeEventListener('copy', this._handlers.copy);
-    document.removeEventListener('cut', this._handlers.cut);
-    document.removeEventListener('keydown', this._handlers.key);
-    document.removeEventListener('visibilitychange', this._handlers.vis);
-    window.removeEventListener('blur', this._handlers.blur);
-    tg.disableClosingConfirmation && tg.disableClosingConfirmation();
-  },
-
-  _violation() {
-    if (State.solving.submitted) return;
-    this.violations++;
-    State.solving.cheatingCount++;
-    if (this.violations >= this.maxV) {
-      document.getElementById('modal-warning').classList.remove('show');
-      document.getElementById('modal-blocked').classList.add('show');
-    } else {
-      document.getElementById('warn-count').textContent = this.violations;
-      document.getElementById('modal-warning').classList.add('show');
-    }
-  }
-};
-
-// ════════════════════════════════════════
-// API CALLS
-// ════════════════════════════════════════
-const Api = {
-  async get(url) {
-    const r = await fetch(API + url);
-    return r.json();
-  },
-  async post(url, data) {
-    const r = await fetch(API + url, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify(data)
+// Telegram'ning native alert/confirm i testda "ilovadan chiqish" deb sanalmasligi uchun o'z dialogimiz
+const Dialog = {
+  show({icon, title, text, tone='', actions}){
+    return new Promise(resolve => {
+      const box = $('dlg');
+      box.className = 'dlg ' + tone;
+      box.innerHTML = `<div class="ic">${icon||''}</div><h3>${esc(title)}</h3><p>${esc(text||'')}</p><div class="row"></div>`;
+      const row = box.querySelector('.row');
+      actions.forEach(a => {
+        const b = document.createElement('button');
+        b.className = 'btn ' + (a.cls||''); b.textContent = a.label;
+        b.onclick = () => { $('dialog').classList.remove('show'); resolve(a.value); };
+        row.appendChild(b);
+      });
+      $('dialog').classList.add('show');
     });
-    return r.json();
-  }
+  },
+  confirm(title, text, yes='Ha', no='Bekor qilish', cls='btn-bad'){
+    return this.show({icon:'❓', title, text, actions:[{label:yes, value:true, cls}, {label:no, value:false, cls:'btn-outline'}]});
+  },
 };
 
-// ════════════════════════════════════════
-// HELPERS
-// ════════════════════════════════════════
-function showPage(id) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  const p = document.getElementById('page-' + id);
-  if (p) { p.classList.add('active'); p.scrollTop = 0; }
-}
-function showErr(id, msg) {
-  const el = document.getElementById(id);
-  if (el) { el.textContent = msg; el.style.display = msg ? 'block' : 'none'; }
-}
-function fmt(seconds) {
-  const m = Math.floor(seconds / 60), s = seconds % 60;
-  return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-}
-function gradeInfo(pct) {
-  if (pct >= 86) return { grade:'🏆', label:'Ajoyib natija!', num:'5', color:'#16a34a' };
-  if (pct >= 71) return { grade:'😊', label:'Yaxshi natija!', num:'4', color:'#2563eb' };
-  if (pct >= 56) return { grade:'😐', label:'O\'rtacha natija', num:'3', color:'#d97706' };
-  return { grade:'😔', label:"Ko'proq o'qing!", num:'2', color:'#dc2626' };
-}
-function getCodeValue() {
-  return Array.from(document.querySelectorAll('.code-digit')).map(i => i.value).join('');
+// ═════════ API ═════════
+async function api(method, url, body){
+  const headers = {'Content-Type':'application/json', 'ngrok-skip-browser-warning':'1'};
+  if (tg.initData) headers['X-Tg-Init-Data'] = tg.initData;
+  else if (DEV_ID) headers['X-Dev-User'] = DEV_ID;
+  try {
+    const r = await fetch(url, {method, headers, body: body ? JSON.stringify(body) : undefined});
+    const j = await r.json().catch(() => ({ok:false, message:"Server javobi tushunarsiz"}));
+    j.status = r.status;
+    return j;
+  } catch(e) {
+    return {ok:false, network:true, message:"Internet bilan aloqa yo'q"};
+  }
 }
 
-// ════════════════════════════════════════
-// APP
-// ════════════════════════════════════════
+// ═════════ Sahifalar ═════════
+const Nav = {
+  current: 'loading',
+  show(id){
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const p = $('page-' + id); p.classList.add('active'); p.scrollTop = 0;
+    this.current = id;
+    $('tabbar').classList.toggle('show', !!p.dataset.tabs);
+    const parent = p.dataset.parent;
+    try { parent ? tg.BackButton.show() : tg.BackButton.hide(); } catch(e){}
+    if (p.dataset.tabs) Tabs.render(id);
+  },
+};
+try { tg.BackButton.onClick(() => App.back()); } catch(e){}
+
+const Tabs = {
+  render(active){
+    const teacher = State.user && State.user.role === 'teacher';
+    const items = teacher
+      ? [['teacher-home','📋','Testlar'],['profile','👤','Profil']]
+      : [['student-home','📝','Test'],['student-results','📈','Natijalar'],['profile','👤','Profil']];
+    $('tabbar').innerHTML = items.map(([id,ic,label]) =>
+      `<button class="${id===active?'active':''}" onclick="App.go('${id}')"><span>${ic}</span>${label}</button>`).join('');
+  },
+};
+
+const State = { user:null, tests:[], creating:{subject:null, questions:[], errors:[]}, found:null };
+
+// ═════════ Test yechish ═════════
+const Test = {
+  info:null, qs:[], answers:[], cur:0, endAt:null, timer:null, cheat:0, submitted:false, active:false, away:false, t0:0,
+  key(){ return `bst:${State.user.user_id}:${this.info.id}`; },
+  save(){ try { localStorage.setItem(this.key(), JSON.stringify({a:this.answers, c:this.cheat, i:this.cur})); } catch(e){} },
+  load(){ try { return JSON.parse(localStorage.getItem(this.key())); } catch(e){ return null; } },
+  clear(){ try { localStorage.removeItem(this.key()); } catch(e){} },
+
+  async begin(code){
+    const r = await api('POST', `/api/tests/${code}/start`);
+    if (!r.ok) return r;
+    this.info = r.test; this.qs = r.questions;
+    const saved = this.load();
+    const okSaved = saved && Array.isArray(saved.a) && saved.a.length === this.qs.length;
+    this.answers = okSaved ? saved.a : new Array(this.qs.length).fill(-1);
+    this.cheat = okSaved ? (saved.c||0) : 0;
+    this.cur = okSaved ? Math.min(saved.i||0, this.qs.length-1) : 0;
+    this.submitted = false; this.t0 = Date.now(); this.away = false;
+
+    $('t-name').textContent = this.info.test_name;
+    const tm = $('t-timer');
+    clearInterval(this.timer);
+    if (r.remaining !== null) {
+      this.endAt = Date.now() + r.remaining * 1000;
+      tm.style.display = ''; tm.classList.remove('warn');
+      this.timer = setInterval(() => this.tick(), 500); this.tick();
+    } else { this.endAt = null; tm.style.display = 'none'; }
+
+    this.watch(true);
+    Nav.show('taking');
+    this.render();
+    if (this.cheat >= 3) this.submit(true);      // qayta ochilganda ham 3 ta buzish saqlanadi
+    return r;
+  },
+
+  tick(){
+    const left = Math.ceil((this.endAt - Date.now()) / 1000);    // qurilma soatiga emas, server bergan qoldiqqa tayanadi
+    const tm = $('t-timer');
+    tm.textContent = fmtTime(left);
+    tm.classList.toggle('warn', left <= 60);
+    if (left <= 0 && !this.submitted) {
+      clearInterval(this.timer);
+      Dialog.show({icon:'⏱', title:'Vaqt tugadi', text:'Javoblaringiz topshirilmoqda.', actions:[{label:'OK', value:1}]});
+      this.submit(true);
+    }
+  },
+
+  render(){
+    const q = this.qs[this.cur], n = this.qs.length;
+    $('q-count').textContent = `${this.cur+1}-savol, jami ${n} ta`;
+    $('q-text').textContent = q.question_text;
+    $('q-opts').innerHTML = q.options.map((o,i) =>
+      `<button class="opt ${this.answers[this.cur]===i?'sel':''}" onclick="Test.pick(${i})">
+         <span class="ltr">${LETTERS[i]||i+1}</span><span class="tx">${esc(o)}</span></button>`).join('');
+    $('t-dots').innerHTML = this.qs.map((_,i) =>
+      `<button class="dot ${this.answers[i]>=0?'done':''} ${i===this.cur?'cur':''}" onclick="Test.jump(${i})" aria-label="${i+1}-savol">${i+1}</button>`).join('');
+    const cd = $('t-dots').children[this.cur]; if (cd && cd.scrollIntoView) cd.scrollIntoView({inline:'center', block:'nearest'});
+    const last = this.cur === n-1;
+    $('btn-prev').disabled = this.cur === 0;
+    $('btn-next').style.display = last ? 'none' : '';
+    $('btn-submit').style.display = last ? '' : 'none';
+    $('page-taking').scrollTop = 0;
+  },
+  pick(i){ this.answers[this.cur] = i; this.save(); this.render(); },
+  move(d){ this.cur = Math.max(0, Math.min(this.qs.length-1, this.cur+d)); this.save(); this.render(); },
+  jump(i){ this.cur = i; this.save(); this.render(); },
+
+  // Ilovadan chiqishni aniqlash. visibilitychange va blur ikkalasi ham otadi —
+  // shu sababli bitta chiqish `away` bayrog'i bilan faqat bir marta sanaladi.
+  watch(on){
+    this.active = on;
+    const h = this.handlers || (this.handlers = {
+      ctx: e => e.preventDefault(),
+      key: e => { const k = e.key.toLowerCase();
+        if (e.key === 'F12' || (e.ctrlKey && ['c','v','a','s','u','p'].includes(k)) || (e.ctrlKey && e.shiftKey && ['i','j','c'].includes(k))) e.preventDefault(); },
+      hide: () => document.hidden ? this.leave() : this.back(),
+      blur: () => this.leave(),
+      focus: () => this.back(),
+    });
+    const op = on ? 'addEventListener' : 'removeEventListener';
+    document[op]('contextmenu', h.ctx); document[op]('copy', h.ctx); document[op]('cut', h.ctx);
+    document[op]('keydown', h.key); document[op]('visibilitychange', h.hide);
+    window[op]('blur', h.blur); window[op]('focus', h.focus);
+    try { on ? tg.enableClosingConfirmation() : tg.disableClosingConfirmation(); } catch(e){}
+  },
+  back(){ if (!document.hidden) this.away = false; },
+  async leave(){
+    if (!this.active || this.submitted || this.away) return;
+    if (Date.now() - this.t0 < 1500) return;       // sahifa ochilishidagi tasodifiy blur
+    this.away = true;
+    this.cheat++; this.save();
+    if (this.cheat >= 3) {
+      await Dialog.show({icon:'🚫', title:'Test yakunlandi', tone:'bad',
+        text:"Siz 3 marta ilovadan chiqdingiz. Javoblaringiz topshiriladi.", actions:[{label:'Natijani ko\'rish', value:1}]});
+      this.submit(true);
+    } else {
+      await Dialog.show({icon:'⚠️', title:'Ogohlantirish', tone:'warn',
+        text:`Siz ilovadan chiqdingiz (${this.cheat}/3). 3-marta test avtomatik topshiriladi.`, actions:[{label:'Davom etaman', value:1}]});
+      this.away = false;
+    }
+  },
+
+  async submit(force=false){
+    if (this.submitted) return;
+    if (!force) {
+      const left = this.answers.filter(a => a < 0).length;
+      const ok = await Dialog.confirm('Testni topshirasizmi?',
+        left ? `${left} ta savolga javob bermadingiz.` : 'Barcha savollarga javob berdingiz.', 'Topshirish', 'Qaytish', 'btn-ok');
+      if (!ok) return;
+    }
+    this.submitted = true;                           // ikki marta yuborilmasin
+    const r = await api('POST', '/api/results', {test_id:this.info.id, answers:this.answers, cheating_count:this.cheat});
+    if (!r.ok && r.network) {                        // internet yo'q: testni yo'qotmaymiz
+      this.submitted = false; this.away = false;
+      toast("Internet yo'q. Ulanib, qayta bosing");
+      return;
+    }
+    clearInterval(this.timer); this.watch(false); this.clear();
+    if (!r.ok) {
+      toast(r.message || 'Xatolik');
+      App.go('student-home');
+      return;
+    }
+    App.showResult(r);
+  },
+};
+
+// ═════════ Ilova ═════════
 const App = {
+  async init(){
+    $('subject-grid').innerHTML = SUBJECTS.map(([n,ic], i) =>
+      `<button class="subject" onclick="App.pickSubject(${i})"><span class="ic">${ic}</span>${esc(n)}</button>`).join('');
+    this.initCodeInputs();
 
-  // ── Init ─────────────────────────────
-  async init() {
-    // Build subject grid
-    const grid = document.getElementById('subject-grid');
-    SUBJECTS.forEach(s => {
-      grid.innerHTML += `
-        <div class="subject-item" onclick="App.selectSubject('${s.id}','${s.name}')">
-          <div class="icon">${s.icon}</div>
-          <div class="name">${s.name}</div>
-        </div>`;
-    });
-
-    // Code digit inputs
-    document.querySelectorAll('.code-digit').forEach(inp => {
-      inp.addEventListener('input', e => {
-        const v = e.target.value.replace(/\D/g,'');
-        e.target.value = v ? v[v.length-1] : '';
-        if (v) { e.target.classList.add('filled'); }
-        else { e.target.classList.remove('filled'); }
-        const idx = parseInt(e.target.dataset.idx);
-        if (v && idx < 5) {
-          document.querySelectorAll('.code-digit')[idx+1].focus();
-        }
-      });
-      inp.addEventListener('keydown', e => {
-        if (e.key === 'Backspace' && !e.target.value) {
-          const idx = parseInt(e.target.dataset.idx);
-          if (idx > 0) document.querySelectorAll('.code-digit')[idx-1].focus();
-        }
-      });
-    });
-
-    // Load user
-    try {
-      const r = await Api.get('/api/user/' + TG_USER.id);
-      if (r.ok) {
-        State.user = r.user;
-        this._gotoMain();
-      } else {
-        showPage('reg-name');
-      }
-    } catch(e) {
-      showPage('reg-name');
-    }
-  },
-
-  _gotoMain() {
-    if (State.user.role === 'teacher') {
-      document.getElementById('teacher-welcome').textContent =
-        'Xush kelibsiz, ' + State.user.full_name.split(' ')[0] + '! 👋';
-      showPage('teacher-home');
-    } else {
-      document.getElementById('student-welcome').textContent =
-        'Xush kelibsiz, ' + State.user.full_name.split(' ')[0] + '! 👋';
-      showPage('student-home');
-    }
-  },
-
-  goto(page) { showPage(page); },
-
-  // ── Registration ─────────────────────
-  regSubmitName() {
-    const v = document.getElementById('inp-fullname').value.trim();
-    if (v.split(/\s+/).length < 2) {
-      showErr('reg-name-err', "To'liq ism-familiya kiriting (kamida 2 so'z)");
+    const r = await api('GET', '/api/me');
+    if (!r.ok) {
+      if (r.status === 401) this.fatal("Telegram ichida oching", "Bu ilova faqat Telegram botidagi tugma orqali ishlaydi.");
+      else this.fatal("Ulanib bo'lmadi", r.message || '');
       return;
     }
-    showErr('reg-name-err', '');
-    State._regName = v;
-    showPage('reg-phone');
+    if (r.user) { State.user = r.user; this.home(); } else Nav.show('register');
+  },
+  fatal(title, text){ $('error-title').textContent = title; $('error-text').textContent = text; Nav.show('error'); },
+
+  home(){ this.go(State.user.role === 'teacher' ? 'teacher-home' : 'student-home'); },
+
+  go(id){
+    if (Test.active && id !== 'taking' && id !== 'result') return;   // test paytida chiqib bo'lmaydi
+    Nav.show(id);
+    if (id === 'teacher-home') { $('teacher-hello').textContent = 'Salom, ' + State.user.full_name.split(' ')[0]; this.loadTests(); }
+    if (id === 'student-home') { $('student-hello').textContent = 'Salom, ' + State.user.full_name.split(' ')[0]; this.resetCode(); }
+    if (id === 'student-results') this.loadMyResults();
+    if (id === 'profile') this.renderProfile();
+    if (id === 'subject') this.resetCreating();
+  },
+  back(){
+    if (Test.active) return;
+    const parent = $('page-' + Nav.current).dataset.parent;
+    if (parent) this.go(parent === 'questions' ? 'questions' : parent);
   },
 
-  regSubmitPhone() {
-    const v = document.getElementById('inp-phone').value.trim();
-    if (!/^\+?[\d\s\-]{9,15}$/.test(v)) {
-      showErr('reg-phone-err', "To'g'ri telefon raqam kiriting");
+  // ── Ro'yxatdan o'tish ──
+  regNext(){
+    const name = $('inp-fullname').value.trim().replace(/\s+/g,' ');
+    const phone = $('inp-phone').value.trim();
+    if (name.split(' ').length < 2) return showErr('reg-err', "Ism va familiyani kiriting");
+    if (!/^\+?[\d\s\-()]{9,20}$/.test(phone) || phone.replace(/\D/g,'').length < 9) return showErr('reg-err', "Telefon raqam noto'g'ri");
+    showErr('reg-err', '');
+    State.reg = {name, phone};
+    Nav.show('role');
+  },
+  async pickRole(role){
+    const r = await api('POST', '/api/register', {full_name:State.reg.name, phone:State.reg.phone, role});
+    if (!r.ok) { toast(r.message || 'Xatolik'); return; }
+    State.user = r.user; this.home();
+  },
+
+  // ── Profil ──
+  renderProfile(){
+    const u = State.user;
+    $('p-avatar').textContent = u.full_name.trim()[0].toUpperCase();
+    $('p-name').textContent = u.full_name;
+    $('p-phone').textContent = u.phone;
+    $('p-role').textContent = u.role === 'teacher' ? "O'qituvchi" : "O'quvchi";
+    $('btn-role').textContent = u.role === 'teacher' ? "O'quvchi rejimiga o'tish" : "O'qituvchi rejimiga o'tish";
+  },
+  async changeRole(){
+    const to = State.user.role === 'teacher' ? 'student' : 'teacher';
+    const ok = await Dialog.confirm("Rolni almashtirasizmi?", `Siz ${to === 'teacher' ? "o'qituvchi" : "o'quvchi"} sifatida davom etasiz.`, 'Almashtirish', 'Bekor qilish', '');
+    if (!ok) return;
+    const r = await api('POST', '/api/role', {role:to});
+    if (!r.ok) return toast(r.message || 'Xatolik');
+    State.user.role = to; this.home();
+  },
+
+  // ── O'qituvchi: test yaratish ──
+  resetCreating(){ State.creating = {subject:null, questions:[], errors:[]}; },
+  pickSubject(i){
+    State.creating.subject = SUBJECTS[i][0];
+    $('q-title').textContent = SUBJECTS[i][0];
+    showErr('q-err','');
+    Nav.show('questions');
+  },
+  async parse(){
+    const name = $('inp-test-name').value.trim();
+    const text = $('inp-questions').value.trim();
+    if (!name) return showErr('q-err', "Test nomini kiriting");
+    if (!text) return showErr('q-err', "Savollarni kiriting");
+    showErr('q-err','');
+    const btn = $('btn-parse'); busy(btn, true, 'Tekshirilmoqda...');
+    const r = await api('POST', '/api/parse-questions', {text});
+    busy(btn, false, 'Savollarni tekshirish');
+    if (!r.ok) return showErr('q-err', r.message || 'Xatolik');
+
+    State.creating.questions = r.questions; State.creating.errors = r.errors;
+    $('ok-count').textContent = r.questions.length; $('err-count').textContent = r.errors.length;
+    $('list-ok').innerHTML = r.questions.length ? r.questions.map((q,i) => `
+      <div class="q-review"><div class="qt">${i+1}. ${esc(q.question)}</div>
+        <ul>${q.options.map((o,j) => `<li class="${j===q.correct?'right':''}">${esc(o)}</li>`).join('')}</ul></div>`).join('')
+      : `<div class="empty"><h3>Qabul qilingan savol yo'q</h3><p>Xatolar bo'limini ko'ring.</p></div>`;
+    $('list-err').innerHTML = r.errors.length ? r.errors.map(e => `
+      <div class="q-review bad"><div class="qt">${e.num}-blok${e.question ? ': ' + esc(e.question) : ''}</div>
+        <div class="why">${esc(e.reason)}</div></div>`).join('')
+      : `<div class="empty"><h3>Xato yo'q</h3></div>`;
+    $('btn-create').disabled = !r.questions.length;
+    showErr('review-err', r.errors.length && r.questions.length ? `${r.errors.length} ta xato blok testga qo'shilmaydi` : '');
+    this.tab(r.questions.length ? 'ok' : 'err');
+    Nav.show('review');
+  },
+  tab(t){
+    $('list-ok').style.display = t === 'ok' ? '' : 'none';
+    $('list-err').style.display = t === 'err' ? '' : 'none';
+    $('tab-ok').classList.toggle('active', t === 'ok');
+    $('tab-err').classList.toggle('active', t === 'err');
+  },
+  async createTest(){
+    const c = State.creating;
+    const name = $('inp-test-name').value.trim();
+    const time = parseInt($('inp-time-limit').value, 10);
+    const btn = $('btn-create'); busy(btn, true, 'Yaratilmoqda...');
+    const r = await api('POST', '/api/tests', {subject:c.subject, name, questions:c.questions, time_limit:time});
+    busy(btn, false, 'Testni yaratish');
+    if (!r.ok) return showErr('review-err', r.message || 'Xatolik');
+    haptic('success');
+    $('created-code').textContent = r.code;
+    $('created-name').textContent = name;
+    $('created-meta').textContent = `${c.subject} · ${c.questions.length} ta savol` + (time ? ` · ${time} daqiqa` : '');
+    $('inp-questions').value = ''; $('inp-test-name').value = ''; $('inp-time-limit').value = '0';
+    Nav.show('created');
+  },
+  async copy(text){
+    try { await navigator.clipboard.writeText(text); }
+    catch(e) {
+      const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta);
+      ta.select(); try { document.execCommand('copy'); } catch(_){} ta.remove();
+    }
+    toast('Nusxalandi: ' + text);
+  },
+
+  // ── O'qituvchi: testlar va natijalar ──
+  async loadTests(){
+    const list = $('tests-list'); list.innerHTML = '<div class="spinner"></div>';
+    const r = await api('GET', '/api/teacher/tests');
+    if (!r.ok) { list.innerHTML = `<div class="empty"><h3>${esc(r.message||'Xatolik')}</h3></div>`; return; }
+    State.tests = r.tests;
+    if (!r.tests.length) {
+      list.innerHTML = `<div class="empty"><div class="ic">📭</div><h3>Hali test yo'q</h3><p>Birinchi testingizni yarating, o'quvchilarga kod bering.</p></div>`;
       return;
     }
-    showErr('reg-phone-err', '');
-    State._regPhone = v;
-    showPage('select-role');
-  },
-
-  async selectRole(role) {
-    // Highlight
-    document.getElementById('role-teacher-card').style.borderColor =
-      role === 'teacher' ? 'var(--blue)' : 'transparent';
-    document.getElementById('role-student-card').style.borderColor =
-      role === 'student' ? 'var(--blue)' : 'transparent';
-
-    const r = await Api.post('/api/register', {
-      user_id: TG_USER.id,
-      full_name: State._regName,
-      phone: State._regPhone,
-      role
-    });
-    if (r.ok) {
-      State.user = r.user;
-      this._gotoMain();
-    } else {
-      tg.showAlert(r.message || "Xatolik yuz berdi");
-    }
-  },
-
-  // ── Teacher: Create Test ─────────────
-  selectSubject(id, name) {
-    State.creating.subject = { id, name };
-    document.getElementById('eq-subject-title').textContent = name + ' — Savollar';
-    showPage('enter-questions');
-  },
-
-  async parseQuestions() {
-    const text = document.getElementById('inp-questions').value.trim();
-    if (!text) { tg.showAlert("Savollarni kiriting!"); return; }
-    const r = await Api.post('/api/parse-questions', { text });
-    State.creating.questions = r.questions;
-    State.creating.errors = r.errors;
-
-    document.getElementById('ok-count').textContent = r.questions.length;
-    document.getElementById('err-count').textContent = r.errors.length;
-
-    // Render ok list
-    const okList = document.getElementById('list-ok');
-    okList.innerHTML = r.questions.length
-      ? r.questions.map((q,i) => `
-          <div class="q-item">
-            <div class="q-num">✅</div>
-            <div class="q-text"><b>${i+1}.</b> ${q.question} <br>
-              <span style="font-size:12px;color:var(--gray)">${q.options.length} ta javob</span>
-            </div>
-          </div>`).join('')
-      : '<div class="empty-state"><p>Qabul qilingan savol yo\'q</p></div>';
-
-    // Render error list
-    const errList = document.getElementById('list-err');
-    errList.innerHTML = r.errors.length
-      ? r.errors.map(e => `
-          <div class="q-item error">
-            <div class="q-num">❌</div>
-            <div class="q-text"><b>${e.num}. ${e.question||''}</b>
-              <div class="q-err">${e.reason}</div>
-            </div>
-          </div>`).join('')
-      : '<div class="empty-state"><p>Xato savol yo\'q</p></div>';
-
-    document.getElementById('btn-save-questions').disabled = r.questions.length === 0;
-    if (r.errors.length > 0 && r.questions.length === 0) {
-      this.switchTab('err');
-    } else {
-      this.switchTab('ok');
-    }
-    showPage('review-questions');
-  },
-
-  switchTab(tab) {
-    document.getElementById('list-ok').style.display = tab === 'ok' ? 'block' : 'none';
-    document.getElementById('list-err').style.display = tab === 'err' ? 'block' : 'none';
-    document.getElementById('tab-ok').classList.toggle('active', tab === 'ok');
-    document.getElementById('tab-err').classList.toggle('active', tab === 'err');
-  },
-
-  gotoTestInfo() {
-    if (!State.creating.questions.length) {
-      tg.showAlert("Kamida 1 ta to'g'ri savol bo'lishi kerak!");
-      return;
-    }
-    showPage('test-info');
-  },
-
-  async createTest() {
-    const name = document.getElementById('inp-test-name').value.trim();
-    const time = parseInt(document.getElementById('inp-time-limit').value);
-    if (!name) { showErr('test-info-err', "Test nomini kiriting"); return; }
-    showErr('test-info-err', '');
-
-    const r = await Api.post('/api/tests', {
-      teacher_id: TG_USER.id,
-      subject: State.creating.subject.name,
-      name,
-      questions: State.creating.questions,
-      time_limit: time
-    });
-    if (r.ok) {
-      document.getElementById('created-code').textContent = r.code;
-      document.getElementById('created-test-name').textContent = name;
-      document.getElementById('created-test-meta').textContent =
-        `${State.creating.subject.name} | ${State.creating.questions.length} ta savol` +
-        (time ? ` | ${time} daqiqa` : '');
-      State._lastCode = r.code;
-      showPage('test-created');
-      // Reset
-      State.creating = { subject: null, questions: [], errors: [], name: '', time: 0 };
-      document.getElementById('inp-questions').value = '';
-      document.getElementById('inp-test-name').value = '';
-    } else {
-      tg.showAlert(r.message || "Xatolik!");
-    }
-  },
-
-  copyCode() {
-    const code = document.getElementById('created-code').textContent;
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(code);
-    }
-    tg.showAlert(`Kod nusxa olindi: ${code}`);
-  },
-
-  // ── Teacher: Tests list ───────────────
-  async loadTeacherTests() {
-    showPage('my-tests');
-    const r = await Api.get('/api/teacher/tests/' + TG_USER.id);
-    const list = document.getElementById('my-tests-list');
-    if (!r.ok || !r.tests.length) {
-      list.innerHTML = `<div class="empty-state">
-        <div class="e-icon">📭</div>
-        <h3>Testlar yo'q</h3>
-        <p>Hali birorta ham test yaratmagansiz</p>
-      </div>`;
-      return;
-    }
-    list.innerHTML = r.tests.map(t => `
-      <div class="test-item">
-        <div class="t-name">${t.test_name}</div>
-        <div class="t-meta">${t.subject} ${t.time_limit ? '| ⏱ '+t.time_limit+' daqiqa' : ''}</div>
-        <div class="t-code">${t.code}</div>
-        <div class="t-actions">
-          <button class="btn btn-primary btn-sm" onclick="App.viewResults(${t.id},'${t.test_name}')">
-            📊 Natijalar (${t.participants||0})
-          </button>
+    list.innerHTML = r.tests.map((t,i) => `
+      <div class="item">
+        <div class="name">${esc(t.test_name)}</div>
+        <div class="meta">${esc(t.subject)} · ${t.question_count} ta savol${t.time_limit ? ' · '+t.time_limit+' daqiqa' : ''}</div>
+        <div class="code-chip" onclick="App.copy('${esc(t.code)}')" role="button" tabindex="0">${esc(t.code)} <small>nusxalash</small></div>
+        <div class="actions">
+          <button class="btn btn-sm" onclick="App.viewResults(${i})">Natijalar (${t.participants})</button>
+          <span class="grow"></span>
+          <button class="btn btn-sm btn-quiet" onclick="App.removeTest(${i})">O'chirish</button>
         </div>
       </div>`).join('');
   },
-
-  async viewResults(testId, testName) {
-    State.viewTestId = testId;
-    document.getElementById('results-test-name').textContent = testName;
-    showPage('test-results');
-    const r = await Api.get('/api/teacher/results/' + testId);
-    const list = document.getElementById('test-results-list');
-    if (!r.ok || !r.results.length) {
-      list.innerHTML = `<div class="empty-state">
-        <div class="e-icon">📭</div>
-        <h3>Hali hech kim yechmagan</h3>
-      </div>`;
+  async removeTest(i){
+    const t = State.tests[i];
+    const ok = await Dialog.confirm("Testni o'chirasizmi?", `"${t.test_name}" va uning ${t.participants} ta natijasi o'chadi. Buni qaytarib bo'lmaydi.`, "O'chirish");
+    if (!ok) return;
+    const r = await api('DELETE', '/api/teacher/tests/' + t.id);
+    if (!r.ok) return toast(r.message || 'Xatolik');
+    toast("Test o'chirildi"); this.loadTests();
+  },
+  async viewResults(i){
+    const t = State.tests[i];
+    $('results-title').textContent = t.test_name;
+    const box = $('results-list'); box.innerHTML = '<div class="spinner"></div>';
+    Nav.show('test-results');
+    const r = await api('GET', '/api/teacher/results/' + t.id);
+    if (!r.ok) { box.innerHTML = `<div class="empty"><h3>${esc(r.message||'Xatolik')}</h3></div>`; return; }
+    if (!r.results.length) {
+      box.innerHTML = `<div class="empty"><div class="ic">⏳</div><h3>Hali hech kim topshirmagan</h3><p>Kod: <b>${esc(t.code)}</b></p></div>`;
       return;
     }
-    const medals = ['🥇','🥈','🥉'];
-    list.innerHTML = `<p style="font-size:13px;color:var(--gray);margin-bottom:12px">
-      Topshirdi: <b>${r.results.length} ta</b> o'quvchi</p>` +
-      r.results.map((res, i) => {
-        const pct = res.total ? Math.round(res.score/res.total*100) : 0;
-        const g = gradeInfo(pct);
-        const medal = i < 3 ? medals[i] : (i+1)+'.';
-        const cheatNote = res.cheating_count > 0
-          ? `<span class="badge badge-red">⚠️ Chit: ${res.cheating_count}</span>` : '';
-        return `<div class="result-item">
-          <div class="r-name">
-            <span class="medal">${medal}</span>${res.full_name} ${cheatNote}
-            <span class="r-score" style="margin-left:auto">${res.score}/${res.total}</span>
-          </div>
-          <div class="pct-bar"><div class="pct-fill" style="width:${pct}%;background:${g.color}"></div></div>
-          <div class="r-info">${pct}% — Baho: ${g.num} ${g.grade} | ${res.completed_at.slice(0,16)}</div>
-        </div>`;
+    const avg = Math.round(r.results.reduce((s,x) => s + pctOf(x.score,x.total), 0) / r.results.length);
+    box.innerHTML = `<div class="summary"><div><b>${r.results.length}</b><span>topshirdi</span></div><div><b>${avg}%</b><span>o'rtacha</span></div></div>` +
+      r.results.map((x,k) => {
+        const p = pctOf(x.score,x.total), g = gradeInfo(p);
+        return `<div class="item">
+          <div class="score-row"><div class="rank ${k<3?'top':''}">${k+1}</div>
+            <div class="who">${esc(x.full_name||'Noma\'lum')}${x.cheating_count ? `<span class="tag">chiqdi: ${x.cheating_count}</span>` : ''}</div>
+            <div class="pts">${x.score}/${x.total}</div></div>
+          <div class="bar"><i style="width:${p}%;background:${g.color}"></i></div>
+          <div class="meta">${p}% · baho ${g.num} · ${fmtDate(x.completed_at)}</div></div>`;
       }).join('');
   },
 
-  // ── Student: Solve Test ───────────────
-  async searchTest() {
-    const code = getCodeValue();
-    if (code.length < 6) { showErr('code-err', "6 ta raqam kiriting"); return; }
-    showErr('code-err', '');
-    const r = await Api.get('/api/tests/' + code);
-    if (!r.ok) { showErr('code-err', "Bu kodli test topilmadi!"); return; }
-
-    State.solving.test = r.test;
-    State.solving.questions = r.questions;
-
-    document.getElementById('preview-name').textContent = r.test.test_name;
-    document.getElementById('preview-subject').textContent = r.test.subject;
-    document.getElementById('preview-teacher').textContent = r.test.teacher_name;
-    document.getElementById('preview-count').textContent = r.questions.length + ' ta';
-    document.getElementById('preview-time').textContent = r.test.time_limit
-      ? r.test.time_limit + ' daqiqa' : 'Cheksiz';
-    showPage('test-preview');
-  },
-
-  startTest() {
-    const q = State.solving;
-    q.answers = new Array(q.questions.length).fill(-1);
-    q.current = 0;
-    q.cheatingCount = 0;
-    q.submitted = false;
-
-    document.getElementById('taking-test-name').textContent = q.test.test_name;
-
-    // Timer
-    if (q.test.time_limit > 0) {
-      q.timeLeft = q.test.time_limit * 60;
-      document.getElementById('test-timer').style.display = 'flex';
-      q.timer = setInterval(() => {
-        q.timeLeft--;
-        document.getElementById('test-timer').textContent = '⏱ ' + fmt(q.timeLeft);
-        if (q.timeLeft <= 60) {
-          document.getElementById('test-timer').classList.add('warning');
+  // ── O'quvchi: kod kiritish ──
+  codeInputs(){ return Array.from(document.querySelectorAll('#code-inputs input')); },
+  initCodeInputs(){
+    const ins = this.codeInputs();
+    const sync = () => ins.forEach(i => i.classList.toggle('filled', !!i.value));
+    ins.forEach((inp, idx) => {
+      inp.addEventListener('input', () => {
+        const digits = inp.value.replace(/\D/g, '');
+        if (digits.length > 1) {                       // joylashtirish (paste) yoki avto-to'ldirish
+          digits.slice(0, 6 - idx).split('').forEach((d, k) => ins[idx + k].value = d);
+          ins[Math.min(idx + digits.length, 5)].focus();
+        } else {
+          inp.value = digits;
+          if (digits && idx < 5) ins[idx + 1].focus();
         }
-        if (q.timeLeft <= 0) this.submitTest();
-      }, 1000);
-    } else {
-      document.getElementById('test-timer').style.display = 'none';
-    }
-
-    AntiCheat.start();
-    showPage('taking-test');
-    this._renderQuestion();
-  },
-
-  _renderQuestion() {
-    const q = State.solving;
-    const qi = q.questions[q.current];
-    const total = q.questions.length;
-    const letters = ['A','B','C','D','E','F'];
-
-    document.getElementById('q-counter').textContent = `${q.current+1} / ${total}`;
-    document.getElementById('progress-fill').style.width = `${((q.current+1)/total)*100}%`;
-    document.getElementById('q-text').textContent = `${q.current+1}. ${qi.question_text}`;
-
-    const opts = qi.options;
-    document.getElementById('options-list').innerHTML = opts.map((opt, i) => `
-      <button class="option-btn ${q.answers[q.current]===i?'selected':''}"
-              onclick="App.selectAnswer(${i})">
-        <span class="option-letter">${letters[i]||i+1}</span>
-        <span>${opt}</span>
-      </button>`).join('');
-
-    // Nav buttons
-    const isLast = q.current === total - 1;
-    document.getElementById('btn-next').style.display = isLast ? 'none' : 'flex';
-    document.getElementById('btn-submit').style.display = isLast ? 'flex' : 'none';
-  },
-
-  selectAnswer(idx) {
-    State.solving.answers[State.solving.current] = idx;
-    this._renderQuestion();
-  },
-
-  nextQuestion() {
-    if (State.solving.answers[State.solving.current] < 0) {
-      tg.showAlert("Avval javobni tanlang!");
-      return;
-    }
-    State.solving.current++;
-    this._renderQuestion();
-  },
-
-  prevQuestion() {
-    if (State.solving.current > 0) {
-      State.solving.current--;
-      this._renderQuestion();
-    }
-  },
-
-  async submitTest() {
-    const q = State.solving;
-    if (q.submitted) return;
-
-    // Check unanswered
-    const unanswered = q.answers.filter(a => a < 0).length;
-    if (unanswered > 0 && !document.getElementById('modal-blocked').classList.contains('show')) {
-      const ok = await new Promise(res => {
-        tg.showConfirm(`${unanswered} ta savol javobsiz. Baribir topshirasizmi?`, res);
+        sync(); showErr('code-err','');
+        if (this.codeValue().length === 6) this.findTest();
       });
-      if (!ok) return;
-    }
-
-    q.submitted = true;
-    AntiCheat.stop();
-    if (q.timer) { clearInterval(q.timer); q.timer = null; }
-
-    const r = await Api.post('/api/results', {
-      test_id: q.test.id,
-      student_id: TG_USER.id,
-      answers: q.answers,
-      cheating_count: q.cheatingCount
+      inp.addEventListener('keydown', e => {
+        if (e.key === 'Backspace' && !inp.value && idx > 0) { ins[idx-1].value = ''; ins[idx-1].focus(); sync(); }
+        if (e.key === 'Enter') this.findTest();
+      });
+      inp.addEventListener('focus', () => inp.select());
     });
-
-    document.getElementById('modal-blocked').classList.remove('show');
-
+  },
+  codeValue(){ return this.codeInputs().map(i => i.value).join(''); },
+  resetCode(){ this.codeInputs().forEach(i => { i.value = ''; i.classList.remove('filled'); }); showErr('code-err',''); },
+  async findTest(){
+    const code = this.codeValue();
+    if (code.length < 6) return showErr('code-err', "6 ta raqam kiriting");
+    if (this._finding) return;
+    this._finding = true;
+    const btn = $('btn-find'); busy(btn, true, 'Qidirilmoqda...');
+    const r = await api('GET', '/api/tests/' + code);
+    this._finding = false; busy(btn, false, 'Testni topish');
     if (!r.ok) {
-      if (r.message === 'Allaqachon yechilgan') {
-        tg.showAlert("Bu testni allaqachon yechgansiz!");
-        showPage('student-home');
-        return;
-      }
-      tg.showAlert(r.message || "Xatolik!");
+      showErr('code-err', r.status === 404 ? "Bunday kodli test topilmadi" : (r.message || 'Xatolik'));
+      const box = $('code-inputs'); box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake');
+      haptic('error');
       return;
     }
-
-    const pct = r.total ? Math.round(r.score/r.total*100) : 0;
-    const g = gradeInfo(pct);
-
-    document.getElementById('res-score').textContent = r.score;
-    document.getElementById('res-total').textContent = '/ ' + r.total;
-    document.getElementById('res-grade').textContent = g.grade;
-    document.getElementById('res-comment').textContent = `Baho: ${g.num} — ${g.label}`;
-    document.getElementById('res-correct').textContent = r.score + ' ta';
-    document.getElementById('res-wrong').textContent = (r.total - r.score) + ' ta';
-    document.getElementById('res-pct').textContent = pct + '%';
-
-    const cheatBanner = document.getElementById('cheat-banner');
-    if (r.cheating_count > 0) {
-      cheatBanner.style.display = 'flex';
-      document.getElementById('cheat-banner-text').textContent =
-        `${r.cheating_count} ta chit urinish qayd etildi`;
-    } else {
-      cheatBanner.style.display = 'none';
+    State.found = r.test;
+    $('pv-name').textContent = r.test.test_name;
+    $('pv-subject').textContent = r.test.subject;
+    $('pv-teacher').textContent = r.test.teacher_name;
+    $('pv-count').textContent = r.test.question_count + ' ta';
+    $('pv-time').textContent = r.test.time_limit ? r.test.time_limit + ' daqiqa' : 'Cheklanmagan';
+    showErr('pv-err', r.done ? "Siz bu testni allaqachon yechgansiz" : '');
+    $('btn-start').disabled = !!r.done;
+    Nav.show('preview');
+  },
+  async startTest(){
+    const btn = $('btn-start'); busy(btn, true, 'Yuklanmoqda...');
+    const r = await Test.begin(State.found.code);
+    busy(btn, false, 'Boshlash');
+    if (!r.ok) {
+      showErr('pv-err', r.message || 'Xatolik');
+      if (r.done || r.expired) $('btn-start').disabled = true;
     }
-
-    // Result circle color
-    document.querySelector('.result-circle').style.borderColor = g.color;
-    document.querySelector('.result-circle .score').style.color = g.color;
-
-    showPage('test-result');
   },
 
-  closeWarning() {
-    document.getElementById('modal-warning').classList.remove('show');
+  // ── Natija ──
+  showResult(r){
+    const p = pctOf(r.score, r.total), g = gradeInfo(p);
+    $('res-grade').textContent = g.num; $('res-grade').style.background = g.color;
+    $('res-score').textContent = r.score; $('res-total').textContent = r.total;
+    $('res-verdict').textContent = g.label;
+    $('res-correct').textContent = r.score + ' ta';
+    $('res-wrong').textContent = (r.total - r.score) + ' ta';
+    $('res-pct').textContent = p + '%';
+    const n = $('res-notice');
+    n.style.display = r.cheating_count ? '' : 'none';
+    n.textContent = r.cheating_count ? `Test vaqtida ${r.cheating_count} marta ilovadan chiqqaningiz o'qituvchiga ma'lum qilindi.` : '';
+    if (r.late) { n.style.display = ''; n.textContent = "Vaqt tugaganidan keyin yuborilgani uchun javoblar hisobga olinmadi."; }
+    Nav.show('result'); haptic('success');
   },
-
-  forceSubmit() {
-    this.submitTest();
-  },
-
-  // ── Student Results ───────────────────
-  async loadStudentResults() {
-    showPage('student-results');
-    const r = await Api.get('/api/student/results/' + TG_USER.id);
-    const list = document.getElementById('student-results-list');
-    if (!r.ok || !r.results.length) {
-      list.innerHTML = `<div class="empty-state">
-        <div class="e-icon">📭</div>
-        <h3>Hali test yechmadingiz</h3>
-        <p>Test yechish uchun bosh sahifaga qayting</p>
-      </div>`;
+  async loadMyResults(){
+    const box = $('my-results'); box.innerHTML = '<div class="spinner"></div>';
+    const r = await api('GET', '/api/student/results');
+    if (!r.ok) { box.innerHTML = `<div class="empty"><h3>${esc(r.message||'Xatolik')}</h3></div>`; return; }
+    if (!r.results.length) {
+      box.innerHTML = `<div class="empty"><div class="ic">📝</div><h3>Hali test yechmagansiz</h3><p>Kodni kiritib, birinchi testingizni boshlang.</p>
+        <button class="btn" onclick="App.go('student-home')">Kod kiritish</button></div>`;
       return;
     }
-    list.innerHTML = r.results.map((res, i) => {
-      const pct = res.total ? Math.round(res.score/res.total*100) : 0;
-      const g = gradeInfo(pct);
-      return `<div class="result-item">
-        <div class="r-name">${i+1}. ${res.test_name}
-          <span class="r-score" style="margin-left:auto;color:${g.color}">${res.score}/${res.total}</span>
-        </div>
-        <div class="pct-bar"><div class="pct-fill" style="width:${pct}%;background:${g.color}"></div></div>
-        <div class="r-info">${res.subject} | ${pct}% | Baho: ${g.num} ${g.grade} | ${res.completed_at.slice(0,16)}</div>
-      </div>`;
+    box.innerHTML = r.results.map(x => {
+      const p = pctOf(x.score,x.total), g = gradeInfo(p);
+      return `<div class="item"><div class="score-row">
+          <div class="rank" style="background:${g.color};border-color:${g.color};color:#fff">${g.num}</div>
+          <div class="who">${esc(x.test_name)}<div class="meta" style="font-weight:400">${esc(x.subject)} · ${fmtDate(x.completed_at)}</div></div>
+          <div class="pts">${x.score}/${x.total}</div></div>
+        <div class="bar"><i style="width:${p}%;background:${g.color}"></i></div></div>`;
     }).join('');
-  },
-
-  // ── Profile ───────────────────────────
-  showProfile() {
-    const u = State.user;
-    document.getElementById('profile-name').textContent = u.full_name;
-    document.getElementById('profile-role').textContent =
-      u.role === 'teacher' ? '👨‍🏫 O\'qituvchi' : '👨‍🎓 O\'quvchi';
-
-    const bnav = document.getElementById('profile-bottom-nav');
-    if (u.role === 'teacher') {
-      bnav.innerHTML = `
-        <button onclick="App.goto('teacher-home')"><span>🏠</span>Bosh</button>
-        <button onclick="App.loadTeacherTests()"><span>📋</span>Testlar</button>
-        <button onclick="App.showProfile()" class="active"><span>👤</span>Profil</button>`;
-    } else {
-      bnav.innerHTML = `
-        <button onclick="App.goto('student-home')"><span>🏠</span>Bosh</button>
-        <button onclick="App.loadStudentResults()"><span>📈</span>Natijalar</button>
-        <button onclick="App.showProfile()" class="active"><span>👤</span>Profil</button>`;
-    }
-    showPage('profile');
-  },
-
-  async changeRole() {
-    const u = State.user;
-    const newRole = u.role === 'teacher' ? 'student' : 'teacher';
-    const labels = { teacher: "O'qituvchi", student: "O'quvchi" };
-    tg.showConfirm(`Roli ${labels[newRole]} ga o'zgartirilsinmi?`, async ok => {
-      if (!ok) return;
-      await Api.post('/api/role', { user_id: TG_USER.id, role: newRole });
-      State.user.role = newRole;
-      this._gotoMain();
-    });
   },
 };
 
-// ════════════════════════════════════════
-// BOOT
-// ════════════════════════════════════════
 window.addEventListener('load', () => App.init());
 </script>
 </body>
