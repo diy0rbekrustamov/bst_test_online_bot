@@ -365,3 +365,50 @@ def get_student_results(student_id):
                         (student_id,)).fetchall()
     conn.close()
     return [dict(r) for r in rows]
+
+
+# ── Statistika ───────────────────────────────────────────────────────────────
+def grade_of(pct):
+    return 5 if pct >= 86 else 4 if pct >= 71 else 3 if pct >= 56 else 2
+
+
+def _summarize(rows):
+    pcts = [round(r['score'] / r['total'] * 100) if r['total'] else 0 for r in rows]
+    dist = {5: 0, 4: 0, 3: 0, 2: 0}
+    for p in pcts:
+        dist[grade_of(p)] += 1
+    return pcts, dist
+
+
+def get_test_stats(test_id):
+    """Bitta test bo'yicha: topshirganlar, o'rtacha foiz, baholar taqsimoti, eng yuqori/past."""
+    conn = get_db()
+    rows = conn.execute('SELECT score, total, cheating_count FROM results WHERE test_id=?', (test_id,)).fetchall()
+    conn.close()
+    pcts, dist = _summarize(rows)
+    return {
+        'count': len(rows),
+        'avg_pct': round(sum(pcts) / len(pcts)) if pcts else 0,
+        'max_pct': max(pcts) if pcts else 0,
+        'min_pct': min(pcts) if pcts else 0,
+        'distribution': dist,
+        'cheaters': sum(1 for r in rows if r['cheating_count']),
+    }
+
+
+def get_teacher_overview(teacher_id):
+    """O'qituvchining barcha testlari bo'yicha umumiy statistika."""
+    conn = get_db()
+    tests = conn.execute('SELECT COUNT(*) AS n FROM tests WHERE teacher_id=?', (teacher_id,)).fetchone()['n']
+    rows = conn.execute('''SELECT r.student_id, r.score, r.total
+                           FROM results r JOIN tests t ON r.test_id=t.id
+                           WHERE t.teacher_id=?''', (teacher_id,)).fetchall()
+    conn.close()
+    pcts, dist = _summarize(rows)
+    return {
+        'tests': tests,
+        'results': len(rows),
+        'students': len({r['student_id'] for r in rows}),
+        'avg_pct': round(sum(pcts) / len(pcts)) if pcts else 0,
+        'distribution': dist,
+    }

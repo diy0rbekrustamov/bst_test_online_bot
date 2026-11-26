@@ -4,6 +4,7 @@ Sozlamalar. Qiymatlar avval muhit o'zgaruvchilaridan, keyin .env fayldan olinadi
 Eng oson yo'l: shu papkada `.env` fayl yarating:
 
     BOT_TOKEN=1234567890:ABCdef...
+    TEACHER_CODE=oqituvchilar_uchun_maxfiy_kod
 
 `.env` fayl .gitignore da — token GitHub ga chiqib ketmaydi.
 """
@@ -28,6 +29,8 @@ def _load_env_file():
 _load_env_file()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN", "YOUR_BOT_TOKEN_HERE")   # @BotFather dan oling
+# O'qituvchi bo'lmoqchi bo'lganlardan bot shu kodni so'raydi. Faqat o'qituvchilarga bering.
+TEACHER_CODE = os.getenv("TEACHER_CODE", "").strip()
 PORT = int(os.getenv("PORT", "5000"))
 WEBAPP_URL = os.getenv("WEBAPP_URL", "")                    # run.py ngrok URL bilan to'ldiradi
 DB_PATH = os.getenv("DB_PATH", os.path.join(BASE_DIR, "quiz_bot.db"))

@@ -10,3 +10,8 @@ __pycache__/
 *.pyc
 .venv/
 venv/
+
+# Cloudflare tunnel dasturi (run.py o'zi yuklab oladi)
+cloudflared
+cloudflared.exe
+cloudflared.exe.part
