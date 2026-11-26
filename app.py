@@ -4,6 +4,7 @@ Flask API server — Telegram Mini App backend.
 Har bir so'rov Telegram `initData` imzosi bilan tekshiriladi: foydalanuvchi kimligi
 klient yuborgan `user_id` dan emas, imzolangan ma'lumotdan olinadi.
 """
+import gzip
 import hashlib
 import hmac
 import html
@@ -18,10 +19,11 @@ from flask import Flask, g, jsonify, request, send_from_directory
 
 import config
 from database import (
-    init_db, get_user, save_user, update_role,
+    init_db, get_user,
     parse_questions, validate_questions, create_test, get_test_by_code, get_test_by_id,
     get_questions, already_attempted, start_attempt, get_attempt_start, save_result,
     get_test_results, get_teacher_tests, get_student_results, delete_test,
+    get_test_stats, get_teacher_overview,
 )
 
 app = Flask(__name__, static_folder='webapp', static_url_path='')
@@ -75,7 +77,9 @@ def auth(role=None):
             g.uid = uid
             if role:
                 user = get_user(uid)
-                if not user or user['role'] != role:
+                if not user:
+                    return fail("Avval botda ro'yxatdan o'ting", 403, unregistered=True)
+                if user['role'] != role:
                     return fail("Bu amal uchun ruxsat yo'q", 403)
                 g.user = user
             return fn(*args, **kwargs)
@@ -134,49 +138,17 @@ def remaining_seconds(test, started_at):
 @app.route('/')
 def index():
     resp = send_from_directory('webapp', 'index.html')
-    resp.headers['Cache-Control'] = 'no-store'   # ngrok orqali yangi versiya darrov chiqsin
+    resp.headers['Cache-Control'] = 'no-cache'   # har safar tekshiradi, o'zgarmagan bo'lsa 304 (tez)
     return resp
 
 
 # ── Foydalanuvchi ────────────────────────────────────────────────────────────
+# Ro'yxatdan o'tish va rol tanlash faqat Telegram bot orqali (o'qituvchi uchun kod bilan).
+# Veb-ilova rolni o'zgartira olmaydi — shuning uchun o'zini o'qituvchi qilib qo'yib bo'lmaydi.
 @app.route('/api/me')
 @auth()
 def api_me():
     return jsonify({'ok': True, 'user': get_user(g.uid)})
-
-
-@app.route('/api/register', methods=['POST'])
-@auth()
-def api_register():
-    d = request.get_json(silent=True) or {}
-    fullname = ' '.join(str(d.get('full_name', '')).split())
-    phone = str(d.get('phone', '')).strip()
-    role = d.get('role', 'student')
-    if not fullname or not phone:
-        return fail("Ma'lumotlar to'liq emas")
-    if len(fullname.split()) < 2:
-        return fail("To'liq ism-familiya kiriting")
-    if len(fullname) > MAX_NAME_LEN:
-        return fail("Ism juda uzun")
-    digits = sum(ch.isdigit() for ch in phone)
-    if not (9 <= digits <= 15) or len(phone) > 20:
-        return fail("Telefon raqam noto'g'ri")
-    if role not in ALLOWED_ROLES:
-        return fail("Rol noto'g'ri")
-    save_user(g.uid, fullname, phone, role)
-    return jsonify({'ok': True, 'user': get_user(g.uid)})
-
-
-@app.route('/api/role', methods=['POST'])
-@auth()
-def api_update_role():
-    role = (request.get_json(silent=True) or {}).get('role')
-    if role not in ALLOWED_ROLES:
-        return fail("Rol noto'g'ri")
-    if not get_user(g.uid):
-        return fail("Avval ro'yxatdan o'ting", 404)
-    update_role(g.uid, role)
-    return jsonify({'ok': True})
 
 
 # ── O'qituvchi: test yaratish ────────────────────────────────────────────────
@@ -224,7 +196,17 @@ def api_test_results(test_id):
     test = get_test_by_id(test_id)
     if not test or test['teacher_id'] != g.uid:      # boshqa o'qituvchining natijasi yopiq
         return fail("Test topilmadi", 404)
-    return jsonify({'ok': True, 'results': get_test_results(test_id)})
+    return jsonify({'ok': True, 'results': get_test_results(test_id), 'stats': get_test_stats(test_id)})
+
+
+@app.route('/api/teacher/overview')
+@auth('teacher')
+def api_teacher_overview():
+    tests = get_teacher_tests(g.uid)
+    for t in tests:
+        st = get_test_stats(t['id'])
+        t['avg_pct'], t['distribution'] = st['avg_pct'], st['distribution']
+    return jsonify({'ok': True, 'overview': get_teacher_overview(g.uid), 'tests': tests})
 
 
 @app.route('/api/teacher/tests/<int:test_id>', methods=['DELETE'])
@@ -237,7 +219,7 @@ def api_delete_test(test_id):
 
 # ── O'quvchi: test yechish ───────────────────────────────────────────────────
 @app.route('/api/tests/<code>')
-@auth()
+@auth('student')
 def api_get_test(code):
     """Test haqida ma'lumot (savollarsiz)."""
     test = get_test_by_code(code) if code.isdigit() and len(code) == 6 else None
@@ -249,14 +231,12 @@ def api_get_test(code):
 
 
 @app.route('/api/tests/<code>/start', methods=['POST'])
-@auth()
+@auth('student')
 def api_start_test(code):
     """Testni boshlaydi: boshlanish vaqtini serverda belgilaydi va savollarni beradi."""
     test = get_test_by_code(code) if code.isdigit() and len(code) == 6 else None
     if not test:
         return fail("Test topilmadi", 404)
-    if test['teacher_id'] == g.uid:
-        return fail("O'z testingizni yecha olmaysiz")
     if already_attempted(test['id'], g.uid):
         return fail("Allaqachon yechilgan", done=True)
 
@@ -276,7 +256,7 @@ def api_start_test(code):
 
 
 @app.route('/api/results', methods=['POST'])
-@auth()
+@auth('student')
 def api_submit_result():
     d = request.get_json(silent=True) or {}
     try:
@@ -312,9 +292,30 @@ def api_submit_result():
 
 
 @app.route('/api/student/results')
-@auth()
+@auth('student')
 def api_student_results():
-    return jsonify({'ok': True, 'results': get_student_results(g.uid)})
+    results = get_student_results(g.uid)
+    pcts = [round(r['score'] / r['total'] * 100) if r['total'] else 0 for r in results]
+    avg = round(sum(pcts) / len(pcts)) if pcts else 0
+    return jsonify({'ok': True, 'results': results,
+                    'summary': {'count': len(results), 'avg_pct': avg, 'avg_grade': int(grade_for(avg)) if pcts else None}})
+
+
+# ── Siqish: sahifa va JSON ~5 marta kichrayadi (sekin internetda tezroq ochiladi) ──
+@app.after_request
+def compress(resp):
+    if (resp.status_code != 200 or 'Content-Encoding' in resp.headers
+            or resp.mimetype not in ('text/html', 'application/json')
+            or 'gzip' not in request.headers.get('Accept-Encoding', '')):
+        return resp
+    resp.direct_passthrough = False
+    data = resp.get_data()
+    if len(data) < 800:
+        return resp
+    resp.set_data(gzip.compress(data, 5))
+    resp.headers['Content-Encoding'] = 'gzip'
+    resp.headers['Vary'] = 'Accept-Encoding'
+    return resp
 
 
 # ── Xatolar JSON qaytarsin ───────────────────────────────────────────────────

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="color-scheme" content="light">
+<meta name="color-scheme" content="light dark">
 <title>Online Test</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,16 +11,27 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 /* ═════════ Tokenlar ═════════
-   Mavzu: test blankasi. Siyoh (qora ruchka), ultramarin (to'ldirilgan doira),
-   sariq (belgilagich) — faqat vaqt va kod uchun. */
+   G'oya: test blankasi. Siyoh = qora ruchka, ko'k = to'ldirilgan doira, sariq = belgilagich (vaqt, kod).
+   Baho ranglari ma'noga ega: 5 yashil, 4 ko'k, 3 sariq-to'q, 2 qizil. */
 :root{
   --ink:#101828; --paper:#F4F6FA; --card:#fff; --line:#DCE1EA; --muted:#5B6577;
-  --blue:#2438D6; --blue-soft:#E8EBFF; --hl:#FFD84D; --hl-soft:#FFF6CC;
+  --blue:#2438D6; --blue-soft:#E8EBFF; --on-blue:#fff;
+  --hl:#FFD84D; --hl-soft:#FFF6CC; --on-hl:#101828;
   --ok:#0E9F6E; --ok-soft:#DDF5EA; --bad:#D92D20; --bad-soft:#FDE8E6; --warn:#B54708;
-  --r-card:18px; --r-btn:14px; --r-sm:10px;
-  --font:'Onest',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --g5:#0E9F6E; --g4:#2438D6; --g3:#D98A0B; --g2:#D92D20;
+  --shadow:0 1px 2px rgba(16,24,40,.06);
+  --r-card:18px; --r-btn:14px;
+  --font:'Onest',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --display:'Unbounded','Onest',system-ui,sans-serif;
   --tabbar:64px;
+}
+:root[data-theme=dark]{
+  --ink:#EEF1F8; --paper:#0D1120; --card:#161B2E; --line:#262D45; --muted:#9AA5BE;
+  --blue:#6578FF; --blue-soft:#1C2349; --on-blue:#fff;
+  --hl:#FFD84D; --hl-soft:#2A2610; --on-hl:#101828;
+  --ok:#2FD08E; --ok-soft:#10301F; --bad:#FF6B5E; --bad-soft:#3A1A18; --warn:#F5A524;
+  --g5:#2FD08E; --g4:#7A8BFF; --g3:#F5A524; --g2:#FF6B5E;
+  --shadow:none;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:var(--paper);color:var(--ink);font:400 15px/1.5 var(--font);overflow:hidden}
@@ -32,34 +43,33 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.02em;line-h
 
 /* ═════════ Sahifalar ═════════ */
 .page{position:fixed;inset:0;display:none;flex-direction:column;overflow-y:auto;overscroll-behavior:contain;background:var(--paper)}
-.page.active{display:flex}
+.page.active{display:flex;animation:enter .22s ease-out}
+@keyframes enter{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 .content{flex:1;padding:16px 16px 32px;width:100%;max-width:560px;margin:0 auto}
 .page.tabbed .content{padding-bottom:calc(var(--tabbar) + 32px + env(safe-area-inset-bottom))}
-
 .header{position:sticky;top:0;z-index:10;background:var(--paper);display:flex;align-items:center;gap:12px;
   padding:12px 16px;min-height:60px;border-bottom:1px solid var(--line)}
 .header h2{font-size:17px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .back{width:38px;height:38px;border-radius:50%;border:1.5px solid var(--ink);background:transparent;
   font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.back:active{background:var(--ink);color:#fff}
+.back:active{background:var(--ink);color:var(--paper)}
 
 /* ═════════ Tugmalar ═════════ */
-.btn{width:100%;min-height:50px;padding:12px 18px;border:2px solid var(--ink);border-radius:var(--r-btn);
+.btn{width:100%;min-height:50px;padding:12px 18px;border:2px solid var(--blue);border-radius:var(--r-btn);
   font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
-  background:var(--ink);color:#fff;transition:transform .08s}
+  background:var(--blue);color:var(--on-blue);transition:transform .08s,opacity .15s}
 .btn:active{transform:scale(.98)}
-.btn:disabled{opacity:.4;cursor:not-allowed}
-.btn-outline{background:transparent;color:var(--ink)}
-.btn-ok{background:var(--ok);border-color:var(--ok)}
-.btn-bad{background:var(--bad);border-color:var(--bad)}
-.btn-quiet{background:transparent;border-color:transparent;color:var(--bad);min-height:44px}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.btn-outline{background:transparent;color:var(--ink);border-color:var(--ink)}
+.btn-ok{background:var(--ok);border-color:var(--ok);color:#06210F}
+.btn-bad{background:var(--bad);border-color:var(--bad);color:#fff}
+.btn-quiet{background:transparent;border-color:transparent;color:var(--bad);min-height:40px}
 .btn-sm{width:auto;min-height:40px;padding:8px 16px;font-size:14px;border-radius:12px}
 .row{display:flex;gap:10px}
 .row>*{flex:1}
 
 /* ═════════ Kartalar va forma ═════════ */
-.card{background:var(--card);border:1.5px solid var(--line);border-radius:var(--r-card);padding:16px;margin-bottom:12px}
-.card.flat{background:transparent}
+.card{background:var(--card);border:1.5px solid var(--line);border-radius:var(--r-card);padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
 .title{font-size:24px;margin-bottom:6px}
 .lead{color:var(--muted);margin-bottom:20px}
 .muted{color:var(--muted)}
@@ -67,41 +77,55 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.02em;line-h
 .field{margin-bottom:14px}
 .field label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
 .field input,.field textarea,.field select{width:100%;padding:13px 14px;border:2px solid var(--line);
-  border-radius:12px;font-size:16px;background:#fff;color:var(--ink);outline:none;transition:border-color .15s}
+  border-radius:12px;font-size:16px;background:var(--card);color:var(--ink);outline:none;transition:border-color .15s}
 .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--blue)}
 .field textarea{min-height:190px;resize:vertical;font:13.5px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 .err{color:var(--bad);font-size:13px;font-weight:500;margin:-4px 0 12px;display:none}
 .err.show{display:block}
 
-/* ═════════ Yuklanish ═════════ */
-#page-loading{align-items:center;justify-content:center;background:var(--ink);gap:22px}
-#page-loading h1{color:#fff;font-size:22px}
+/* ═════════ Yuklanish / xato ═════════ */
+#page-loading{align-items:center;justify-content:center;background:#0D1120;gap:20px;animation:none}
+#page-loading h1{color:#fff;font-size:21px}
 .sheet-logo{display:flex;gap:10px}
-.sheet-logo i{width:34px;height:34px;border-radius:50%;border:3px solid #fff;display:block}
-.sheet-logo i:nth-child(1){animation:fill .5s .1s forwards}
-.sheet-logo i:nth-child(2){animation:fill .5s .55s forwards}
-.sheet-logo i:nth-child(3){animation:fill .5s 1s forwards}
-.sheet-logo i:nth-child(4){animation:fill .5s 1.45s forwards}
+.sheet-logo i{width:32px;height:32px;border-radius:50%;border:3px solid #fff;display:block}
+.sheet-logo i:nth-child(1){animation:fill .3s .05s forwards}
+.sheet-logo i:nth-child(2){animation:fill .3s .25s forwards}
+.sheet-logo i:nth-child(3){animation:fill .3s .45s forwards}
+.sheet-logo i:nth-child(4){animation:fill .3s .65s forwards}
 @keyframes fill{to{background:var(--hl);border-color:var(--hl)}}
-#page-error{align-items:center;justify-content:center;text-align:center;padding:32px;gap:12px}
-#page-error .btn{max-width:260px;margin-top:8px}
+.notice-page{align-items:center;justify-content:center;text-align:center;padding:32px;gap:10px}
+.notice-page .ic{font-size:52px}
+.notice-page h2{font-size:20px}
+.notice-page p{color:var(--muted);max-width:320px}
+.notice-page .btn{max-width:260px;margin-top:10px}
 
-/* ═════════ O'quvchi bosh sahifa: kod kiritish ═════════ */
-.code-inputs{display:flex;gap:8px;justify-content:space-between;margin:8px 0 14px}
-.code-inputs input{flex:1;min-width:0;max-width:56px;height:64px;border:2px solid var(--ink);border-radius:14px;
-  text-align:center;font:700 24px var(--display);background:#fff;color:var(--ink);outline:none;padding:0;
-  transition:background .12s,color .12s}
-.code-inputs input.filled{background:var(--blue);border-color:var(--blue);color:#fff}
+/* ═════════ Sarlavha va statistika kartalari ═════════ */
+.hello{margin:6px 0 18px}
+.hello h1{font-size:25px;overflow-wrap:anywhere}
+.hello p{color:var(--muted);margin-top:4px}
+.stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
+.stat{background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:12px 14px;box-shadow:var(--shadow)}
+.stat b{display:block;font:700 24px var(--display);letter-spacing:-.03em;line-height:1.15}
+.stat span{font-size:13px;color:var(--muted)}
+.stat.accent{background:var(--hl);border-color:var(--hl);color:var(--on-hl)}
+.stat.accent span{color:rgba(16,24,40,.7)}
+
+/* ═════════ Kod kiritish (o'quvchi) ═════════ */
+.code-card{background:var(--hl-soft);border:2px solid var(--hl);border-radius:var(--r-card);padding:18px 16px 16px;margin-bottom:18px}
+.code-card h3{font-size:16px;margin-bottom:2px}
+.code-inputs{display:flex;gap:8px;justify-content:space-between;margin:12px 0 12px}
+.code-inputs input{flex:1;min-width:0;max-width:56px;height:62px;border:2px solid var(--ink);border-radius:14px;
+  text-align:center;font:700 24px var(--display);background:var(--card);color:var(--ink);outline:none;padding:0;
+  transition:background .12s,color .12s,border-color .12s}
+.code-inputs input.filled{background:var(--blue);border-color:var(--blue);color:var(--on-blue)}
 .code-inputs input:focus{box-shadow:0 0 0 4px var(--hl)}
 .code-inputs.shake{animation:shake .35s}
 @keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
-.hello{margin:8px 0 22px}
-.hello h1{font-size:26px}
-.code-card{background:var(--hl-soft);border:2px solid var(--hl);border-radius:var(--r-card);padding:18px 16px 16px}
-.code-card h3{font-size:16px;margin-bottom:2px}
+.section-title{font:700 15px var(--font);margin:20px 0 10px;display:flex;justify-content:space-between;align-items:baseline}
+.section-title a{font-weight:500;font-size:13px;color:var(--blue);cursor:pointer}
 
 /* ═════════ Pastki tab ═════════ */
-#tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;display:none;background:#fff;border-top:1.5px solid var(--line);
+#tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;display:none;background:var(--card);border-top:1.5px solid var(--line);
   padding:6px 8px calc(6px + env(safe-area-inset-bottom));justify-content:center;gap:4px}
 #tabbar.show{display:flex}
 #tabbar button{flex:1;max-width:160px;background:none;border:none;border-radius:12px;padding:6px 4px;cursor:pointer;
@@ -111,12 +135,11 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.02em;line-h
 
 /* ═════════ Ro'yxatlar ═════════ */
 .subject-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.subject{background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:14px 6px 12px;text-align:center;
+.subject{background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:14px 6px 12px;text-align:center;
   cursor:pointer;font-size:12.5px;font-weight:600;transition:border-color .12s,background .12s}
 .subject:active{border-color:var(--blue);background:var(--blue-soft)}
 .subject .ic{font-size:30px;line-height:1.3;display:block}
-
-.item{background:#fff;border:1.5px solid var(--line);border-radius:var(--r-card);padding:14px 16px;margin-bottom:10px}
+.item{background:var(--card);border:1.5px solid var(--line);border-radius:var(--r-card);padding:14px 16px;margin-bottom:10px;box-shadow:var(--shadow)}
 .item .name{font-weight:700;font-size:16px;overflow-wrap:anywhere}
 .item .meta{font-size:13px;color:var(--muted);margin-top:2px}
 .code-chip{display:inline-flex;align-items:center;gap:8px;margin-top:10px;padding:8px 12px;border-radius:12px;
@@ -125,33 +148,45 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.02em;line-h
 .item .actions{display:flex;gap:8px;margin-top:12px;align-items:center}
 .item .actions .grow{flex:1}
 
+/* Baholar taqsimoti: yupqa chiziq (ro'yxatda) va ustunlar (statistikada) */
+.dist-line{display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--line);margin-top:12px}
+.dist-line i{display:block;height:100%}
+.g5{background:var(--g5)}.g4{background:var(--g4)}.g3{background:var(--g3)}.g2{background:var(--g2)}
+.dist-legend{display:flex;gap:12px;margin-top:6px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.dist-legend b{color:var(--ink)}
+.dist-legend em{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;vertical-align:0}
+.chart{display:flex;align-items:flex-end;gap:12px;height:150px;padding:8px 4px 0}
+.chart .col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:6px}
+.chart .col .cbar{width:100%;max-width:56px;border-radius:10px 10px 4px 4px;min-height:4px;transform-origin:bottom;animation:grow .5s ease-out}
+@keyframes grow{from{transform:scaleY(0)}}
+.chart .col .n{font:700 15px var(--display)}
+.chart-labels{display:flex;gap:12px;padding:6px 4px 0}
+.chart-labels div{flex:1;text-align:center;font:700 13px var(--font);color:var(--muted)}
+
 .score-row{display:flex;align-items:center;gap:12px}
 .rank{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;
   font-weight:700;font-size:13px;flex-shrink:0}
-.rank.top{background:var(--hl);border-color:var(--hl)}
+.rank.top{background:var(--hl);border-color:var(--hl);color:var(--on-hl)}
+.rank.grade{color:#fff;border:none;font-family:var(--display)}
 .score-row .who{flex:1;min-width:0;font-weight:600;overflow-wrap:anywhere}
 .score-row .pts{font:700 17px var(--display);white-space:nowrap}
 .bar{height:6px;background:var(--line);border-radius:3px;margin-top:10px;overflow:hidden}
 .bar i{display:block;height:100%;border-radius:3px}
 .tag{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;background:var(--bad-soft);color:var(--bad);margin-left:6px;vertical-align:1px}
-.summary{display:flex;gap:10px;margin-bottom:12px}
-.summary div{flex:1;background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:10px 14px}
-.summary b{display:block;font:700 22px var(--display)}
-.summary span{font-size:13px;color:var(--muted)}
 
-.empty{text-align:center;padding:48px 24px;color:var(--muted)}
+.empty{text-align:center;padding:44px 24px;color:var(--muted)}
 .empty .ic{font-size:44px;margin-bottom:8px}
-.empty h3{font-size:16px;color:var(--ink);margin-bottom:4px;font-family:var(--font);letter-spacing:0}
+.empty h3{font:700 16px var(--font);letter-spacing:0;color:var(--ink);margin-bottom:4px}
 .empty .btn{margin-top:16px;max-width:240px;display:inline-flex}
-.spinner{width:30px;height:30px;border:4px solid var(--line);border-top-color:var(--blue);border-radius:50%;
-  animation:spin .8s linear infinite;margin:40px auto}
-@keyframes spin{to{transform:rotate(360deg)}}
+/* Skeleton: spinner o'rniga kontent shakli ko'rinadi, kutish qisqa tuyuladi */
+.skel{height:84px;border-radius:var(--r-card);margin-bottom:10px;background:linear-gradient(90deg,var(--line) 25%,var(--card) 50%,var(--line) 75%);background-size:200% 100%;animation:shimmer 1.2s infinite linear}
+@keyframes shimmer{to{background-position:-200% 0}}
 
 /* ═════════ Savollarni tekshirish ═════════ */
-.tabs{display:flex;background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:3px;margin-bottom:12px}
+.tabs{display:flex;background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:3px;margin-bottom:12px}
 .tabs button{flex:1;padding:9px;border:none;background:transparent;border-radius:9px;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer}
-.tabs button.active{background:var(--ink);color:#fff}
-.q-review{background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px}
+.tabs button.active{background:var(--ink);color:var(--paper)}
+.q-review{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px}
 .q-review.bad{border-color:var(--bad);background:var(--bad-soft)}
 .q-review .qt{font-weight:600;overflow-wrap:anywhere}
 .q-review ul{list-style:none;margin-top:6px}
@@ -166,67 +201,74 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.02em;line-h
 
 /* ═════════ Test yaratildi ═════════ */
 .created{text-align:center;padding-top:24px}
-.created .big-code{display:inline-block;margin:18px 0 6px;padding:16px 22px;background:var(--hl);border-radius:18px;
-  font:700 38px var(--display);letter-spacing:.14em;padding-left:calc(22px + .14em)}
+.created .big-code{display:inline-block;margin:18px 0 6px;padding:16px 22px;background:var(--hl);color:var(--on-hl);border-radius:18px;
+  font:700 38px var(--display);letter-spacing:.14em;padding-left:calc(22px + .14em);animation:pop .35s cubic-bezier(.3,1.5,.5,1)}
+@keyframes pop{from{transform:scale(.8);opacity:0}}
 
 /* ═════════ Test oldi ═════════ */
 .info{display:flex;justify-content:space-between;gap:16px;padding:11px 0;border-bottom:1px solid var(--line);font-size:15px}
 .info:last-child{border:none}
 .info span:first-child{color:var(--muted)}
-.info span:last-child{font-weight:600;text-align:right;overflow-wrap:anywhere}
+.info span:last-child,.info b{font-weight:600;text-align:right;overflow-wrap:anywhere}
 .rules{margin-top:6px;padding-left:20px;font-size:14px;line-height:1.7}
 
 /* ═════════ Test yechish ═════════ */
-#page-taking{background:#fff}
-.t-top{position:sticky;top:0;z-index:15;background:#fff;border-bottom:1.5px solid var(--line);padding:10px 16px 8px}
+#page-taking{background:var(--card)}
+.t-top{position:sticky;top:0;z-index:15;background:var(--card);border-bottom:1.5px solid var(--line);padding:10px 16px 8px}
 .t-row{display:flex;align-items:center;gap:10px;justify-content:space-between}
 .t-name{font-weight:700;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.timer{font:700 15px var(--display);background:var(--hl);border-radius:99px;padding:5px 12px;white-space:nowrap;flex-shrink:0}
+.timer{font:700 15px var(--display);background:var(--hl);color:var(--on-hl);border-radius:99px;padding:5px 12px;white-space:nowrap;flex-shrink:0}
 .timer.warn{background:var(--bad);color:#fff;animation:blink .8s steps(2) infinite}
 @keyframes blink{50%{opacity:.55}}
+.progress{height:4px;background:var(--line);border-radius:2px;margin-top:8px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--blue);border-radius:2px;transition:width .25s}
 .dots{display:flex;gap:8px;overflow-x:auto;padding:10px 4px 6px;margin:0 -4px;scrollbar-width:none}
 .dots::-webkit-scrollbar{display:none}
-.dot{flex:0 0 auto;width:32px;height:32px;border-radius:50%;border:2px solid var(--line);background:#fff;
+.dot{flex:0 0 auto;width:32px;height:32px;border-radius:50%;border:2px solid var(--line);background:var(--card);
   font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;padding:0}
-.dot.done{background:var(--blue);border-color:var(--blue);color:#fff}
+.dot.done{background:var(--blue);border-color:var(--blue);color:var(--on-blue)}
 .dot.cur{border-color:var(--ink);box-shadow:0 0 0 3px var(--hl);color:var(--ink)}
-.dot.done.cur{color:#fff}
+.dot.done.cur{color:var(--on-blue)}
 .q-area{padding:22px 16px 24px;max-width:560px;margin:0 auto;width:100%;flex:1}
 .q-count{font-size:13px;color:var(--muted);font-weight:600;margin-bottom:6px}
 .q-text{font-size:19px;font-weight:700;line-height:1.45;margin-bottom:20px;overflow-wrap:anywhere;white-space:pre-line}
 .opts{display:flex;flex-direction:column;gap:10px}
-.opt{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:12px 14px;background:#fff;
+.opt{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:12px 14px;background:var(--card);
   border:2px solid var(--line);border-radius:16px;font-size:16px;cursor:pointer;transition:border-color .1s,background .1s}
 .opt .ltr{width:34px;height:34px;border-radius:50%;border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;
   font-weight:700;font-size:14px;flex-shrink:0;transition:background .12s,color .12s}
 .opt .tx{flex:1;overflow-wrap:anywhere}
 .opt.sel{border-color:var(--blue);background:var(--blue-soft)}
-.opt.sel .ltr{background:var(--blue);border-color:var(--blue);color:#fff}
-.t-nav{position:sticky;bottom:0;z-index:15;background:#fff;border-top:1.5px solid var(--line);
+.opt.sel .ltr{background:var(--blue);border-color:var(--blue);color:var(--on-blue)}
+.t-nav{position:sticky;bottom:0;z-index:15;background:var(--card);border-top:1.5px solid var(--line);
   padding:10px 16px calc(10px + env(safe-area-inset-bottom));display:flex;gap:10px}
 .t-nav .btn{flex:1}
 
 /* ═════════ Natija ═════════ */
-.result{text-align:center;padding-top:16px}
-.grade{width:104px;height:104px;border-radius:50%;margin:8px auto 14px;display:flex;align-items:center;justify-content:center;
-  font:700 52px var(--display);color:#fff}
-.result .score{font:700 54px var(--display);letter-spacing:-.03em;line-height:1.1}
-.result .score small{font-size:22px;color:var(--muted)}
+.result{text-align:center;padding-top:20px}
+.ring{position:relative;width:170px;height:170px;margin:4px auto 16px}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:12;stroke-linecap:round}
+.ring .track{stroke:var(--line)}
+.ring .val{transition:stroke-dashoffset .9s cubic-bezier(.2,.8,.2,1)}
+.ring .inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring .g{font:700 56px var(--display);line-height:1}
+.ring .p{font-size:14px;color:var(--muted);margin-top:4px;font-weight:600}
+.result .score{font:700 26px var(--display);margin-top:2px}
+.result .score small{font-size:16px;color:var(--muted)}
 .result .verdict{color:var(--muted);margin:6px 0 20px}
-.stats{text-align:left}
-.stats .info b{font-family:var(--display)}
 .notice{margin:12px 0;padding:12px 14px;border-radius:14px;background:var(--bad-soft);color:var(--bad);font-size:14px;font-weight:500;text-align:left}
 
 /* ═════════ Profil ═════════ */
-.avatar{width:84px;height:84px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;
+.avatar{width:84px;height:84px;border-radius:50%;background:var(--blue);color:var(--on-blue);display:flex;align-items:center;justify-content:center;
   font:700 34px var(--display);margin:12px auto 12px}
 .p-name{text-align:center;font:700 20px var(--display);overflow-wrap:anywhere}
-.p-role{text-align:center;color:var(--muted);margin:4px 0 20px}
+.p-role{display:table;margin:8px auto 20px;padding:4px 14px;border-radius:99px;background:var(--hl);color:var(--on-hl);font-weight:600;font-size:13px}
 
 /* ═════════ Dialog va toast ═════════ */
-#dialog{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(16,24,40,.6)}
+#dialog{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(5,8,20,.65)}
 #dialog.show{display:flex}
-.dlg{background:#fff;border-radius:22px;padding:24px 20px 20px;max-width:340px;width:100%;text-align:center;border-top:6px solid var(--ink)}
+.dlg{background:var(--card);border-radius:22px;padding:24px 20px 20px;max-width:340px;width:100%;text-align:center;border-top:6px solid var(--ink);animation:pop .22s ease-out}
 .dlg.warn{border-top-color:var(--hl)}
 .dlg.bad{border-top-color:var(--bad)}
 .dlg .ic{font-size:44px;line-height:1.2}
@@ -234,67 +276,50 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.02em;line-h
 .dlg p{color:var(--muted);font-size:14.5px;margin-bottom:18px;overflow-wrap:anywhere}
 .dlg .row{flex-direction:column}
 #toast{position:fixed;left:50%;bottom:calc(var(--tabbar) + 24px + env(safe-area-inset-bottom));transform:translate(-50%,20px);z-index:120;
-  background:var(--ink);color:#fff;padding:11px 18px;border-radius:99px;font-size:14px;font-weight:500;opacity:0;pointer-events:none;
+  background:var(--ink);color:var(--paper);padding:11px 18px;border-radius:99px;font-size:14px;font-weight:500;opacity:0;pointer-events:none;
   transition:opacity .2s,transform .2s;max-width:90vw;text-align:center}
 #toast.show{opacity:1;transform:translate(-50%,0)}
 
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.sheet-logo i{background:var(--hl);border-color:var(--hl)}}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+  .sheet-logo i{background:var(--hl);border-color:var(--hl)}
+}
 </style>
 </head>
 <body>
 
-<!-- ═════════ Yuklanish / xato ═════════ -->
 <div id="page-loading" class="page active">
   <div class="sheet-logo" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
   <h1>Online Test</h1>
 </div>
 
-<div id="page-error" class="page">
-  <div style="font-size:48px">📵</div>
+<div id="page-error" class="page notice-page">
+  <div class="ic">📵</div>
   <h2 id="error-title">Ulanib bo'lmadi</h2>
-  <p class="muted" id="error-text"></p>
+  <p id="error-text"></p>
   <button class="btn" onclick="location.reload()">Qayta urinish</button>
 </div>
 
-<!-- ═════════ Ro'yxatdan o'tish ═════════ -->
-<div id="page-register" class="page">
-  <div class="content" style="padding-top:36px">
-    <h1 class="title">Tanishib olaylik</h1>
-    <p class="lead">Natijalarda ismingiz ko'rinadi.</p>
-    <div class="field">
-      <label for="inp-fullname">Ism va familiya</label>
-      <input type="text" id="inp-fullname" placeholder="Karimov Jasur" autocomplete="name" maxlength="80">
-    </div>
-    <div class="field">
-      <label for="inp-phone">Telefon raqam</label>
-      <input type="tel" id="inp-phone" placeholder="+998 90 123 45 67" autocomplete="tel" maxlength="20">
-    </div>
-    <div class="err" id="reg-err"></div>
-    <button class="btn" onclick="App.regNext()">Davom etish</button>
-  </div>
-</div>
-
-<div id="page-role" class="page" data-parent="register">
-  <div class="header"><button class="back" onclick="App.back()" aria-label="Orqaga">←</button><h2>Siz kimsiz?</h2></div>
-  <div class="content">
-    <p class="lead">Rolni keyinroq profilda almashtirish mumkin.</p>
-    <button class="card item" style="width:100%;text-align:left;cursor:pointer;padding:18px" onclick="App.pickRole('teacher')">
-      <div class="name" style="font-size:18px">👨‍🏫 O'qituvchi</div>
-      <div class="meta">Test yarating, kod bering va natijalarni ko'ring</div>
-    </button>
-    <button class="card item" style="width:100%;text-align:left;cursor:pointer;padding:18px" onclick="App.pickRole('student')">
-      <div class="name" style="font-size:18px">🎓 O'quvchi</div>
-      <div class="meta">Kod bilan testni yeching va bahoingizni biling</div>
-    </button>
-  </div>
+<div id="page-unreg" class="page notice-page">
+  <div class="ic">👋</div>
+  <h2>Avval botda ro'yxatdan o'ting</h2>
+  <p>Botga qaytib <b>/start</b> yuboring: ism, telefon raqam va rolingizni kiriting. Keyin bu ilova ochiladi.</p>
+  <button class="btn" onclick="App.closeApp()">Botga qaytish</button>
 </div>
 
 <!-- ═════════ O'qituvchi ═════════ -->
 <div id="page-teacher-home" class="page tabbed" data-tabs="1">
   <div class="content">
-    <div class="hello"><h1 id="teacher-hello">Salom!</h1></div>
-    <button class="btn" onclick="App.go('subject')" style="margin-bottom:20px">＋ Yangi test</button>
-    <div id="tests-list"><div class="spinner"></div></div>
+    <div class="hello"><h1 id="teacher-hello">Salom!</h1><p>Testlaringiz va natijalar</p></div>
+    <button class="btn" onclick="App.go('subject')" style="margin-bottom:18px">＋ Yangi test</button>
+    <div id="tests-list"></div>
+  </div>
+</div>
+
+<div id="page-teacher-stats" class="page tabbed" data-tabs="1">
+  <div class="content">
+    <div class="hello"><h1>Statistika</h1><p>Barcha testlar bo'yicha</p></div>
+    <div id="stats-box"></div>
   </div>
 </div>
 
@@ -374,13 +399,13 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.02em;line-h
 
 <div id="page-test-results" class="page" data-parent="teacher-home">
   <div class="header"><button class="back" onclick="App.back()" aria-label="Orqaga">←</button><h2 id="results-title">Natijalar</h2></div>
-  <div class="content" id="results-list"><div class="spinner"></div></div>
+  <div class="content" id="results-list"></div>
 </div>
 
 <!-- ═════════ O'quvchi ═════════ -->
 <div id="page-student-home" class="page tabbed" data-tabs="1">
   <div class="content">
-    <div class="hello"><h1 id="student-hello">Salom!</h1></div>
+    <div class="hello"><h1 id="student-hello">Salom!</h1><p>Test kodini kiriting va boshlang</p></div>
     <div class="code-card">
       <h3>Test kodi</h3>
       <p class="small muted">O'qituvchi bergan 6 ta raqam</p>
@@ -395,6 +420,7 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.02em;line-h
       <div class="err" id="code-err"></div>
       <button class="btn" id="btn-find" onclick="App.findTest()">Testni topish</button>
     </div>
+    <div id="home-recent"></div>
   </div>
 </div>
 
@@ -424,7 +450,8 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.02em;line-h
 <div id="page-taking" class="page">
   <div class="t-top">
     <div class="t-row"><div class="t-name" id="t-name">Test</div><div class="timer" id="t-timer" style="display:none">--:--</div></div>
-    <div class="dots" id="t-dots" role="tablist"></div>
+    <div class="progress"><i id="t-progress" style="width:0"></i></div>
+    <div class="dots" id="t-dots"></div>
   </div>
   <div class="q-area">
     <div class="q-count" id="q-count"></div>
@@ -440,23 +467,22 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.02em;line-h
 
 <div id="page-result" class="page">
   <div class="content result">
-    <div class="grade" id="res-grade">5</div>
-    <div class="score"><span id="res-score">0</span><small> / <span id="res-total">0</span></small></div>
-    <p class="verdict" id="res-verdict"></p>
-    <div class="card stats">
-      <div class="info"><span>To'g'ri</span><b id="res-correct" style="color:var(--ok)"></b></div>
-      <div class="info"><span>Noto'g'ri yoki javobsiz</span><b id="res-wrong" style="color:var(--bad)"></b></div>
-      <div class="info"><span>Foiz</span><b id="res-pct"></b></div>
+    <div class="ring">
+      <svg viewBox="0 0 120 120" aria-hidden="true"><circle class="track" cx="60" cy="60" r="52"/><circle class="val" id="res-ring" cx="60" cy="60" r="52" stroke-dasharray="326.7" stroke-dashoffset="326.7"/></svg>
+      <div class="inner"><div class="g" id="res-grade">5</div><div class="p" id="res-pct">0%</div></div>
     </div>
+    <div class="score"><span id="res-score">0</span><small> / <span id="res-total">0</span> to'g'ri</small></div>
+    <p class="verdict" id="res-verdict"></p>
     <div class="notice" id="res-notice" style="display:none"></div>
     <button class="btn" onclick="App.go('student-home')" style="margin-top:8px">Bosh sahifa</button>
+    <button class="btn btn-outline" onclick="App.go('student-results')" style="margin-top:10px">Barcha natijalarim</button>
   </div>
 </div>
 
 <div id="page-student-results" class="page tabbed" data-tabs="1">
   <div class="content">
     <div class="hello"><h1>Natijalarim</h1></div>
-    <div id="my-results"><div class="spinner"></div></div>
+    <div id="my-results"></div>
   </div>
 </div>
 
@@ -466,10 +492,8 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.02em;line-h
     <div class="avatar" id="p-avatar">?</div>
     <div class="p-name" id="p-name"></div>
     <div class="p-role" id="p-role"></div>
-    <div class="card">
-      <div class="info"><span>Telefon</span><span id="p-phone"></span></div>
-    </div>
-    <button class="btn btn-outline" onclick="App.changeRole()" id="btn-role"></button>
+    <div class="card"><div class="info"><span>Telefon</span><span id="p-phone"></span></div></div>
+    <p class="muted small" style="text-align:center;margin-top:16px">Rolni almashtirish uchun botda <b>/role</b> yuboring</p>
   </div>
 </div>
 
@@ -478,14 +502,22 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.02em;line-h
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script>
-// ═════════ Telegram ═════════
+// ═════════ Telegram va mavzu ═════════
 const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : {
-  initData:'', ready(){}, expand(){}, BackButton:{show(){},hide(){},onClick(){}}, HapticFeedback:null
+  initData:'', ready(){}, expand(){}, close(){}, BackButton:{show(){},hide(){},onClick(){}}, HapticFeedback:null, onEvent(){}
 };
 tg.ready(); tg.expand();
 try { tg.disableVerticalSwipes && tg.disableVerticalSwipes(); } catch(e){}
-try { tg.setHeaderColor && tg.setHeaderColor('#F4F6FA'); tg.setBackgroundColor && tg.setBackgroundColor('#F4F6FA'); } catch(e){}
 const DEV_ID = new URLSearchParams(location.search).get('dev');   // faqat server DEV_MODE=1 bo'lsa ishlaydi
+
+function applyTheme(){
+  const dark = tg.colorScheme ? tg.colorScheme === 'dark' : matchMedia('(prefers-color-scheme:dark)').matches;
+  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  const bg = dark ? '#0D1120' : '#F4F6FA';
+  try { tg.setHeaderColor && tg.setHeaderColor(bg); tg.setBackgroundColor && tg.setBackgroundColor(bg); tg.setBottomBarColor && tg.setBottomBarColor(dark ? '#161B2E' : '#FFFFFF'); } catch(e){}
+}
+applyTheme();
+try { tg.onEvent('themeChanged', applyTheme); } catch(e){}
 
 // ═════════ Yordamchilar ═════════
 const $ = id => document.getElementById(id);
@@ -496,18 +528,20 @@ const SUBJECTS = [
   ['Biologiya','🧬'],['Tarix','🏛️'],['Musiqa','🎵'],['Iqtisod','💰'],['Geografiya','🌍'],
   ['Astronomiya','🪐'],['Ona tili','📖'],['Adabiyot','📚'],['Jismoniy tarbiya','🏃'],['Tasviriy san\'at','🎨'],
 ];
+const GRADE_COLOR = {5:'var(--g5)', 4:'var(--g4)', 3:'var(--g3)', 2:'var(--g2)'};
 const haptic = t => { try { tg.HapticFeedback && tg.HapticFeedback.notificationOccurred(t); } catch(e){} };
+const tick = () => { try { tg.HapticFeedback && tg.HapticFeedback.selectionChanged(); } catch(e){} };
+const reduced = matchMedia('(prefers-reduced-motion:reduce)').matches;
 
 function gradeInfo(pct){
-  if (pct >= 86) return {num:'5', label:"Ajoyib natija", color:'#0E9F6E'};
-  if (pct >= 71) return {num:'4', label:"Yaxshi natija", color:'#2438D6'};
-  if (pct >= 56) return {num:'3', label:"Qoniqarli natija", color:'#B54708'};
-  return {num:'2', label:"Yana mashq qiling", color:'#D92D20'};
+  if (pct >= 86) return {num:5, label:"Ajoyib natija!", color:GRADE_COLOR[5]};
+  if (pct >= 71) return {num:4, label:"Yaxshi natija", color:GRADE_COLOR[4]};
+  if (pct >= 56) return {num:3, label:"Qoniqarli natija", color:GRADE_COLOR[3]};
+  return {num:2, label:"Yana mashq qiling", color:GRADE_COLOR[2]};
 }
 const pctOf = (s,t) => t ? Math.round(s/t*100) : 0;
-function fmtTime(sec){ sec = Math.max(0, sec); return String(Math.floor(sec/60)).padStart(2,'0') + ':' + String(sec%60).padStart(2,'0'); }
-// Server vaqti UTC da: foydalanuvchining mahalliy vaqtiga o'tkazamiz
-function fmtDate(s){
+const fmtTime = sec => { sec = Math.max(0, sec); return String(Math.floor(sec/60)).padStart(2,'0') + ':' + String(sec%60).padStart(2,'0'); };
+function fmtDate(s){            // server UTC beradi → foydalanuvchining mahalliy vaqti
   if (!s) return '';
   const d = new Date(s.replace(' ','T') + 'Z');
   if (isNaN(d)) return s.slice(0,16);
@@ -516,6 +550,27 @@ function fmtDate(s){
 }
 function showErr(id, msg){ const el = $(id); el.textContent = msg || ''; el.classList.toggle('show', !!msg); }
 function busy(btn, on, label){ btn.disabled = on; if (label !== undefined) btn.textContent = label; }
+const skeleton = n => Array.from({length:n}, () => '<div class="skel"></div>').join('');
+function countUp(el, to, ms=700){
+  if (reduced || to === 0) { el.textContent = to; return; }
+  const t0 = performance.now();
+  (function step(t){ const k = Math.min(1, (t - t0) / ms); el.textContent = Math.round(to * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(step); })(t0);
+}
+// Baholar taqsimoti — yupqa chiziq (kartada)
+function distLine(dist){
+  const total = [5,4,3,2].reduce((s,g) => s + (dist[g]||0), 0);
+  if (!total) return '<div class="dist-line"></div><div class="dist-legend"><span>Hali topshirilmagan</span></div>';
+  return `<div class="dist-line">${[5,4,3,2].map(g => dist[g] ? `<i class="g${g}" style="width:${dist[g]/total*100}%"></i>` : '').join('')}</div>
+    <div class="dist-legend">${[5,4,3,2].map(g => `<span><em class="g${g}"></em><b>${dist[g]||0}</b> ta "${g}"</span>`).join('')}</div>`;
+}
+// Baholar taqsimoti — ustunli diagramma
+function distChart(dist){
+  const max = Math.max(1, ...[5,4,3,2].map(g => dist[g]||0));
+  return `<div class="chart" role="img" aria-label="Baholar taqsimoti">${[5,4,3,2].map(g => {
+      const n = dist[g]||0;
+      return `<div class="col"><span class="n">${n}</span><div class="cbar g${g}" style="height:${Math.max(3, n/max*100)}%"></div></div>`;
+    }).join('')}</div><div class="chart-labels">${[5,4,3,2].map(g => `<div>baho ${g}</div>`).join('')}</div>`;
+}
 
 let toastTimer;
 function toast(msg){
@@ -523,7 +578,7 @@ function toast(msg){
   clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
 }
 
-// Telegram'ning native alert/confirm i testda "ilovadan chiqish" deb sanalmasligi uchun o'z dialogimiz
+// Testda Telegram'ning native alert/confirm i "ilovadan chiqish" deb sanalmasligi uchun o'z dialogimiz
 const Dialog = {
   show({icon, title, text, tone='', actions}){
     return new Promise(resolve => {
@@ -547,7 +602,7 @@ const Dialog = {
 
 // ═════════ API ═════════
 async function api(method, url, body){
-  const headers = {'Content-Type':'application/json', 'ngrok-skip-browser-warning':'1'};
+  const headers = {'Content-Type':'application/json'};
   if (tg.initData) headers['X-Tg-Init-Data'] = tg.initData;
   else if (DEV_ID) headers['X-Dev-User'] = DEV_ID;
   try {
@@ -568,8 +623,7 @@ const Nav = {
     const p = $('page-' + id); p.classList.add('active'); p.scrollTop = 0;
     this.current = id;
     $('tabbar').classList.toggle('show', !!p.dataset.tabs);
-    const parent = p.dataset.parent;
-    try { parent ? tg.BackButton.show() : tg.BackButton.hide(); } catch(e){}
+    try { p.dataset.parent ? tg.BackButton.show() : tg.BackButton.hide(); } catch(e){}
     if (p.dataset.tabs) Tabs.render(id);
   },
 };
@@ -579,14 +633,14 @@ const Tabs = {
   render(active){
     const teacher = State.user && State.user.role === 'teacher';
     const items = teacher
-      ? [['teacher-home','📋','Testlar'],['profile','👤','Profil']]
+      ? [['teacher-home','📋','Testlar'],['teacher-stats','📊','Statistika'],['profile','👤','Profil']]
       : [['student-home','📝','Test'],['student-results','📈','Natijalar'],['profile','👤','Profil']];
     $('tabbar').innerHTML = items.map(([id,ic,label]) =>
       `<button class="${id===active?'active':''}" onclick="App.go('${id}')"><span>${ic}</span>${label}</button>`).join('');
   },
 };
 
-const State = { user:null, tests:[], creating:{subject:null, questions:[], errors:[]}, found:null };
+const State = { user:null, tests:[], overview:null, creating:{subject:null, questions:[], errors:[]}, found:null };
 
 // ═════════ Test yechish ═════════
 const Test = {
@@ -624,7 +678,7 @@ const Test = {
   },
 
   tick(){
-    const left = Math.ceil((this.endAt - Date.now()) / 1000);    // qurilma soatiga emas, server bergan qoldiqqa tayanadi
+    const left = Math.ceil((this.endAt - Date.now()) / 1000);   // server bergan qoldiqqa tayanadi, qurilma soatiga emas
     const tm = $('t-timer');
     tm.textContent = fmtTime(left);
     tm.classList.toggle('warn', left <= 60);
@@ -644,6 +698,8 @@ const Test = {
          <span class="ltr">${LETTERS[i]||i+1}</span><span class="tx">${esc(o)}</span></button>`).join('');
     $('t-dots').innerHTML = this.qs.map((_,i) =>
       `<button class="dot ${this.answers[i]>=0?'done':''} ${i===this.cur?'cur':''}" onclick="Test.jump(${i})" aria-label="${i+1}-savol">${i+1}</button>`).join('');
+    const answered = this.answers.filter(a => a >= 0).length;
+    $('t-progress').style.width = (answered / n * 100) + '%';
     const cd = $('t-dots').children[this.cur]; if (cd && cd.scrollIntoView) cd.scrollIntoView({inline:'center', block:'nearest'});
     const last = this.cur === n-1;
     $('btn-prev').disabled = this.cur === 0;
@@ -651,7 +707,7 @@ const Test = {
     $('btn-submit').style.display = last ? '' : 'none';
     $('page-taking').scrollTop = 0;
   },
-  pick(i){ this.answers[this.cur] = i; this.save(); this.render(); },
+  pick(i){ this.answers[this.cur] = i; tick(); this.save(); this.render(); },
   move(d){ this.cur = Math.max(0, Math.min(this.qs.length-1, this.cur+d)); this.save(); this.render(); },
   jump(i){ this.cur = i; this.save(); this.render(); },
 
@@ -706,11 +762,7 @@ const Test = {
       return;
     }
     clearInterval(this.timer); this.watch(false); this.clear();
-    if (!r.ok) {
-      toast(r.message || 'Xatolik');
-      App.go('student-home');
-      return;
-    }
+    if (!r.ok) { toast(r.message || 'Xatolik'); App.go('student-home'); return; }
     App.showResult(r);
   },
 };
@@ -728,17 +780,21 @@ const App = {
       else this.fatal("Ulanib bo'lmadi", r.message || '');
       return;
     }
-    if (r.user) { State.user = r.user; this.home(); } else Nav.show('register');
+    if (!r.user) { Nav.show('unreg'); return; }
+    State.user = r.user; this.home();
   },
   fatal(title, text){ $('error-title').textContent = title; $('error-text').textContent = text; Nav.show('error'); },
+  closeApp(){ try { tg.close(); } catch(e){} },
 
   home(){ this.go(State.user.role === 'teacher' ? 'teacher-home' : 'student-home'); },
 
   go(id){
     if (Test.active && id !== 'taking' && id !== 'result') return;   // test paytida chiqib bo'lmaydi
     Nav.show(id);
-    if (id === 'teacher-home') { $('teacher-hello').textContent = 'Salom, ' + State.user.full_name.split(' ')[0]; this.loadTests(); }
-    if (id === 'student-home') { $('student-hello').textContent = 'Salom, ' + State.user.full_name.split(' ')[0]; this.resetCode(); }
+    const first = State.user ? State.user.full_name : '';
+    if (id === 'teacher-home') { $('teacher-hello').textContent = 'Salom, ' + first; this.loadTests(); }
+    if (id === 'teacher-stats') this.loadStats();
+    if (id === 'student-home') { $('student-hello').textContent = 'Salom, ' + first; this.resetCode(); this.loadRecent(); }
     if (id === 'student-results') this.loadMyResults();
     if (id === 'profile') this.renderProfile();
     if (id === 'subject') this.resetCreating();
@@ -746,23 +802,7 @@ const App = {
   back(){
     if (Test.active) return;
     const parent = $('page-' + Nav.current).dataset.parent;
-    if (parent) this.go(parent === 'questions' ? 'questions' : parent);
-  },
-
-  // ── Ro'yxatdan o'tish ──
-  regNext(){
-    const name = $('inp-fullname').value.trim().replace(/\s+/g,' ');
-    const phone = $('inp-phone').value.trim();
-    if (name.split(' ').length < 2) return showErr('reg-err', "Ism va familiyani kiriting");
-    if (!/^\+?[\d\s\-()]{9,20}$/.test(phone) || phone.replace(/\D/g,'').length < 9) return showErr('reg-err', "Telefon raqam noto'g'ri");
-    showErr('reg-err', '');
-    State.reg = {name, phone};
-    Nav.show('role');
-  },
-  async pickRole(role){
-    const r = await api('POST', '/api/register', {full_name:State.reg.name, phone:State.reg.phone, role});
-    if (!r.ok) { toast(r.message || 'Xatolik'); return; }
-    State.user = r.user; this.home();
+    if (parent) this.go(parent);
   },
 
   // ── Profil ──
@@ -771,16 +811,7 @@ const App = {
     $('p-avatar').textContent = u.full_name.trim()[0].toUpperCase();
     $('p-name').textContent = u.full_name;
     $('p-phone').textContent = u.phone;
-    $('p-role').textContent = u.role === 'teacher' ? "O'qituvchi" : "O'quvchi";
-    $('btn-role').textContent = u.role === 'teacher' ? "O'quvchi rejimiga o'tish" : "O'qituvchi rejimiga o'tish";
-  },
-  async changeRole(){
-    const to = State.user.role === 'teacher' ? 'student' : 'teacher';
-    const ok = await Dialog.confirm("Rolni almashtirasizmi?", `Siz ${to === 'teacher' ? "o'qituvchi" : "o'quvchi"} sifatida davom etasiz.`, 'Almashtirish', 'Bekor qilish', '');
-    if (!ok) return;
-    const r = await api('POST', '/api/role', {role:to});
-    if (!r.ok) return toast(r.message || 'Xatolik');
-    State.user.role = to; this.home();
+    $('p-role').textContent = u.role === 'teacher' ? "👨‍🏫 O'qituvchi" : "🎓 O'quvchi";
   },
 
   // ── O'qituvchi: test yaratish ──
@@ -847,14 +878,18 @@ const App = {
     toast('Nusxalandi: ' + text);
   },
 
-  // ── O'qituvchi: testlar va natijalar ──
+  // ── O'qituvchi: testlar, statistika, natijalar ──
+  async fetchOverview(){
+    const r = await api('GET', '/api/teacher/overview');
+    if (r.ok) { State.tests = r.tests; State.overview = r.overview; }
+    return r;
+  },
   async loadTests(){
-    const list = $('tests-list'); list.innerHTML = '<div class="spinner"></div>';
-    const r = await api('GET', '/api/teacher/tests');
+    const list = $('tests-list'); list.innerHTML = skeleton(3);
+    const r = await this.fetchOverview();
     if (!r.ok) { list.innerHTML = `<div class="empty"><h3>${esc(r.message||'Xatolik')}</h3></div>`; return; }
-    State.tests = r.tests;
     if (!r.tests.length) {
-      list.innerHTML = `<div class="empty"><div class="ic">📭</div><h3>Hali test yo'q</h3><p>Birinchi testingizni yarating, o'quvchilarga kod bering.</p></div>`;
+      list.innerHTML = `<div class="empty"><div class="ic">📭</div><h3>Hali test yo'q</h3><p>Birinchi testingizni yarating va o'quvchilarga kod bering.</p></div>`;
       return;
     }
     list.innerHTML = r.tests.map((t,i) => `
@@ -862,12 +897,40 @@ const App = {
         <div class="name">${esc(t.test_name)}</div>
         <div class="meta">${esc(t.subject)} · ${t.question_count} ta savol${t.time_limit ? ' · '+t.time_limit+' daqiqa' : ''}</div>
         <div class="code-chip" onclick="App.copy('${esc(t.code)}')" role="button" tabindex="0">${esc(t.code)} <small>nusxalash</small></div>
+        ${distLine(t.distribution)}
         <div class="actions">
           <button class="btn btn-sm" onclick="App.viewResults(${i})">Natijalar (${t.participants})</button>
           <span class="grow"></span>
           <button class="btn btn-sm btn-quiet" onclick="App.removeTest(${i})">O'chirish</button>
         </div>
       </div>`).join('');
+  },
+  async loadStats(){
+    const box = $('stats-box'); box.innerHTML = skeleton(3);
+    const r = await this.fetchOverview();
+    if (!r.ok) { box.innerHTML = `<div class="empty"><h3>${esc(r.message||'Xatolik')}</h3></div>`; return; }
+    const o = r.overview;
+    if (!o.results) {
+      box.innerHTML = `<div class="stat-grid"><div class="stat"><b>${o.tests}</b><span>testlar</span></div><div class="stat"><b>0</b><span>topshirishlar</span></div></div>
+        <div class="empty"><div class="ic">📊</div><h3>Hali natija yo'q</h3><p>O'quvchilar test topshirgach, statistika shu yerda paydo bo'ladi.</p></div>`;
+      return;
+    }
+    const ranked = r.tests.filter(t => t.participants).sort((a,b) => b.avg_pct - a.avg_pct);
+    box.innerHTML = `
+      <div class="stat-grid">
+        <div class="stat accent"><b>${o.avg_pct}%</b><span>o'rtacha natija</span></div>
+        <div class="stat"><b>${o.results}</b><span>topshirishlar</span></div>
+        <div class="stat"><b>${o.students}</b><span>o'quvchilar</span></div>
+        <div class="stat"><b>${o.tests}</b><span>testlar</span></div>
+      </div>
+      <div class="card"><div class="section-title" style="margin-top:0"><span>Baholar taqsimoti</span></div>${distChart(o.distribution)}</div>
+      <div class="section-title"><span>Testlar bo'yicha o'rtacha</span></div>
+      ${ranked.map(t => { const g = gradeInfo(t.avg_pct); return `
+        <div class="item"><div class="score-row">
+          <div class="rank grade" style="background:${g.color}">${g.num}</div>
+          <div class="who">${esc(t.test_name)}<div class="meta" style="font-weight:400">${esc(t.subject)} · ${t.participants} ta topshirgan</div></div>
+          <div class="pts">${t.avg_pct}%</div></div>
+          <div class="bar"><i style="width:${t.avg_pct}%;background:${g.color}"></i></div></div>`; }).join('')}`;
   },
   async removeTest(i){
     const t = State.tests[i];
@@ -880,16 +943,25 @@ const App = {
   async viewResults(i){
     const t = State.tests[i];
     $('results-title').textContent = t.test_name;
-    const box = $('results-list'); box.innerHTML = '<div class="spinner"></div>';
+    const box = $('results-list'); box.innerHTML = skeleton(3);
     Nav.show('test-results');
     const r = await api('GET', '/api/teacher/results/' + t.id);
     if (!r.ok) { box.innerHTML = `<div class="empty"><h3>${esc(r.message||'Xatolik')}</h3></div>`; return; }
     if (!r.results.length) {
-      box.innerHTML = `<div class="empty"><div class="ic">⏳</div><h3>Hali hech kim topshirmagan</h3><p>Kod: <b>${esc(t.code)}</b></p></div>`;
+      box.innerHTML = `<div class="empty"><div class="ic">⏳</div><h3>Hali hech kim topshirmagan</h3>
+        <p>O'quvchilarga kodni bering:</p><div class="code-chip" onclick="App.copy('${esc(t.code)}')">${esc(t.code)} <small>nusxalash</small></div></div>`;
       return;
     }
-    const avg = Math.round(r.results.reduce((s,x) => s + pctOf(x.score,x.total), 0) / r.results.length);
-    box.innerHTML = `<div class="summary"><div><b>${r.results.length}</b><span>topshirdi</span></div><div><b>${avg}%</b><span>o'rtacha</span></div></div>` +
+    const s = r.stats;
+    box.innerHTML = `
+      <div class="stat-grid">
+        <div class="stat accent"><b>${s.avg_pct}%</b><span>o'rtacha</span></div>
+        <div class="stat"><b>${s.count}</b><span>topshirdi</span></div>
+        <div class="stat"><b>${s.max_pct}%</b><span>eng yuqori</span></div>
+        <div class="stat"><b>${s.min_pct}%</b><span>eng past</span></div>
+      </div>
+      <div class="card">${distChart(s.distribution)}</div>
+      <div class="section-title"><span>Reyting</span></div>` +
       r.results.map((x,k) => {
         const p = pctOf(x.score,x.total), g = gradeInfo(p);
         return `<div class="item">
@@ -962,23 +1034,41 @@ const App = {
     }
   },
 
-  // ── Natija ──
+  // ── Natijalar ──
   showResult(r){
     const p = pctOf(r.score, r.total), g = gradeInfo(p);
-    $('res-grade').textContent = g.num; $('res-grade').style.background = g.color;
-    $('res-score').textContent = r.score; $('res-total').textContent = r.total;
-    $('res-verdict').textContent = g.label;
-    $('res-correct').textContent = r.score + ' ta';
-    $('res-wrong').textContent = (r.total - r.score) + ' ta';
+    Nav.show('result');
+    $('res-grade').textContent = g.num; $('res-grade').style.color = g.color;
+    $('res-total').textContent = r.total;
     $('res-pct').textContent = p + '%';
+    $('res-verdict').textContent = g.label;
+    const ring = $('res-ring'); ring.style.stroke = g.color;
+    ring.style.strokeDashoffset = 326.7;
+    requestAnimationFrame(() => requestAnimationFrame(() => { ring.style.strokeDashoffset = 326.7 * (1 - p / 100); }));
+    countUp($('res-score'), r.score);
     const n = $('res-notice');
-    n.style.display = r.cheating_count ? '' : 'none';
-    n.textContent = r.cheating_count ? `Test vaqtida ${r.cheating_count} marta ilovadan chiqqaningiz o'qituvchiga ma'lum qilindi.` : '';
-    if (r.late) { n.style.display = ''; n.textContent = "Vaqt tugaganidan keyin yuborilgani uchun javoblar hisobga olinmadi."; }
-    Nav.show('result'); haptic('success');
+    n.style.display = r.cheating_count || r.late ? '' : 'none';
+    n.textContent = r.late ? "Vaqt tugaganidan keyin yuborilgani uchun javoblar hisobga olinmadi."
+      : r.cheating_count ? `Test vaqtida ${r.cheating_count} marta ilovadan chiqqaningiz o'qituvchiga ma'lum qilindi.` : '';
+    haptic(g.num >= 4 ? 'success' : 'warning');
+  },
+  resultCard(x){
+    const p = pctOf(x.score,x.total), g = gradeInfo(p);
+    return `<div class="item"><div class="score-row">
+        <div class="rank grade" style="background:${g.color}">${g.num}</div>
+        <div class="who">${esc(x.test_name)}<div class="meta" style="font-weight:400">${esc(x.subject)} · ${fmtDate(x.completed_at)}</div></div>
+        <div class="pts">${x.score}/${x.total}</div></div>
+      <div class="bar"><i style="width:${p}%;background:${g.color}"></i></div></div>`;
+  },
+  async loadRecent(){
+    const box = $('home-recent');
+    const r = await api('GET', '/api/student/results');
+    if (!r.ok || !r.results.length) { box.innerHTML = ''; return; }
+    box.innerHTML = `<div class="section-title"><span>So'nggi natijalar</span><a onclick="App.go('student-results')">Hammasi</a></div>` +
+      r.results.slice(0,2).map(x => this.resultCard(x)).join('');
   },
   async loadMyResults(){
-    const box = $('my-results'); box.innerHTML = '<div class="spinner"></div>';
+    const box = $('my-results'); box.innerHTML = skeleton(3);
     const r = await api('GET', '/api/student/results');
     if (!r.ok) { box.innerHTML = `<div class="empty"><h3>${esc(r.message||'Xatolik')}</h3></div>`; return; }
     if (!r.results.length) {
@@ -986,14 +1076,11 @@ const App = {
         <button class="btn" onclick="App.go('student-home')">Kod kiritish</button></div>`;
       return;
     }
-    box.innerHTML = r.results.map(x => {
-      const p = pctOf(x.score,x.total), g = gradeInfo(p);
-      return `<div class="item"><div class="score-row">
-          <div class="rank" style="background:${g.color};border-color:${g.color};color:#fff">${g.num}</div>
-          <div class="who">${esc(x.test_name)}<div class="meta" style="font-weight:400">${esc(x.subject)} · ${fmtDate(x.completed_at)}</div></div>
-          <div class="pts">${x.score}/${x.total}</div></div>
-        <div class="bar"><i style="width:${p}%;background:${g.color}"></i></div></div>`;
-    }).join('');
+    const s = r.summary, g = gradeInfo(s.avg_pct);
+    box.innerHTML = `<div class="stat-grid">
+        <div class="stat accent"><b>${s.avg_grade}</b><span>o'rtacha baho</span></div>
+        <div class="stat"><b>${s.count}</b><span>yechilgan test</span></div></div>` +
+      r.results.map(x => this.resultCard(x)).join('');
   },
 };
 
