@@ -140,7 +140,12 @@ def start_ngrok():
         return None
     try:
         from pyngrok import ngrok
-        ngrok.set_auth_token(token)
+        try:
+            ngrok.set_auth_token(token)
+        except Exception as e:
+            # Token allaqachon ngrok.yml da saqlangan bo'lsa pyngrok shunday xato beradi — bu xato emas
+            if "already" not in str(e).lower():
+                raise
         return ngrok.connect(config.PORT, "http").public_url.replace("http://", "https://")
     except Exception as e:
         print(f"❌ Ngrok ishlamadi: {e}")
