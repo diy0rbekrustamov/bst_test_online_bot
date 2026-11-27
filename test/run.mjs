@@ -210,7 +210,7 @@ const nCalls = calls.length;
 const res = await api(S, 'POST', '/api/results', { test_id: st.test.id, answers: [1, 1], cheating_count: 2 });
 check('natija: 2/2', res.ok && res.score === 2 && res.total === 2 && res.late === false, JSON.stringify(res));
 const note = await waitFor(() => calls.slice(nCalls).find((c) => c.method === 'sendMessage' && c.chat_id === T));
-check('o\'qituvchiga xabar keldi', !!note && /Yangi natija/.test(note.text) && /Baho: 5/.test(note.text) && /Chiqib ketishlar: 2/.test(note.text));
+check('o\'qituvchiga xabar keldi', !!note && /Yangi natija/.test(note.text) && /Baho: 5/.test(note.text) && /Qoidabuzarliklar.*: 2/.test(note.text));
 check('xabarda HTML ekranlangan', note && note.text.includes('&lt;b&gt;1&lt;/b&gt;') && !note.text.includes('<b>1</b>'));
 check('qayta topshirib bo\'lmaydi', (await api(S, 'POST', '/api/results', { test_id: st.test.id, answers: [1, 1] })).done === true);
 check('qayta start → done', (await api(S, 'POST', `/api/tests/${CODE}/start`)).done === true);

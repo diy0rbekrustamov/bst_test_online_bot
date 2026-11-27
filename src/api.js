@@ -21,7 +21,7 @@ async function finalizeResult(c, test, studentId, answers, cheating) {
   const student = await D.getUser(c.env.DB, studentId);
   if (student) {
     const pct = total ? (score / total) * 100 : 0;
-    const cheat = cheating ? `\n⚠️ Chiqib ketishlar: ${cheating}` : '';
+    const cheat = cheating ? `\n⚠️ Qoidabuzarliklar (chiqish/skrinshot): ${cheating}` : '';
     // Javobni kutdirmaymiz: xabar fonda yuboriladi
     c.ctx.waitUntil(sendMessage(c.env, test.teacher_id,
       `📢 <b>Yangi natija!</b>\n\n` +
