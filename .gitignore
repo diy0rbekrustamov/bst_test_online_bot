@@ -15,3 +15,8 @@ venv/
 cloudflared
 cloudflared.exe
 cloudflared.exe.part
+
+# Cloudflare Workers
+node_modules/
+.wrangler/
+.dev.vars

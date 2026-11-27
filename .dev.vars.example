@@ -1,0 +1,5 @@
+# Mahalliy sinov uchun: nusxa oling -> .dev.vars (git'ga tushmaydi)
+BOT_TOKEN=123456:TEST
+TEACHER_CODE=maxfiy-kod
+WEBHOOK_SECRET=test_secret_123
+DEV_MODE=1
