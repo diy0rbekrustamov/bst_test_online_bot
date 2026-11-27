@@ -13,35 +13,35 @@ O'qituvchi test yaratadi va 6 xonali kod beradi, o'quvchi shu kod bilan testni y
 
 Ro'yxatdan o'tish va rol faqat botda hal qilinadi; veb-ilova buni o'zgartira olmaydi. O'qituvchi test yecha olmaydi, o'quvchi esa test yarata olmaydi va natijalarni ko'ra olmaydi — bu server tomonda tekshiriladi.
 
-## 🚀 Ishga tushirish
+## 🚀 Cloudflare'ga joylash (24/7, kompyuter kerak emas)
 
-1. **Python 3.10+** o'rnating: https://python.org
-2. **Bot token** oling: Telegramda `@BotFather` → `/newbot`
-3. Shu papkada `.env` fayl yarating:
+Loyiha **Cloudflare Workers + D1** da ishlaydi: doimiy HTTPS manzil, tunnel va ngrok kerak emas.
+
+1. `npm install`
+2. Bazani yarating (bir marta) va `wrangler.jsonc` dagi `database_id` ni yozing:
+   `npx wrangler d1 create bst-test-db` → `npm run db:remote`
+3. Maxfiy qiymatlar (kodda saqlanmaydi):
    ```
-   BOT_TOKEN=1234567890:ABCdef...
-   TEACHER_CODE=oqituvchilar_uchun_maxfiy_kod
+   npx wrangler secret put BOT_TOKEN        # BotFather tokeni
+   npx wrangler secret put TEACHER_CODE     # o'qituvchilar uchun maxfiy kod
+   npx wrangler secret put WEBHOOK_SECRET   # o'zingiz o'ylab toping: faqat A-Z a-z 0-9 _ -
    ```
-   `TEACHER_CODE` ni o'zingiz o'ylab toping va faqat o'qituvchilarga bering. Kod yo'q bo'lsa hech kim o'qituvchi bo'la olmaydi.
-4. Ishga tushiring:
-   - Windows: `start.bat` ni ikki marta bosing
-   - boshqa: `pip install -r requirements.txt` va `python run.py`
+4. `npx wrangler deploy`
+5. Brauzerda **bir marta** oching: `https://<worker-manzili>/setup?key=<WEBHOOK_SECRET>` — webhook, buyruqlar va «Ilova» tugmasi o'rnatiladi.
 
-`run.py` hammasini birga ishga tushiradi: server, **Cloudflare tunnel** (akkaunt va token kerak emas, ngrok'dagi "visiting" ogohlantirish sahifasi yo'q) va bot. Birinchi marta `cloudflared` (~40 MB) o'zi yuklab olinadi.
+Git bilan avtomatik deploy: Cloudflare Dashboard → Workers → loyihani GitHub repoga ulang (Worker nomi `wrangler.jsonc` dagi `name` bilan bir xil bo'lsin).
+Maxsus domen ishlatsangiz Dashboard'da Variables ga `WEBAPP_URL=https://domen.uz` qo'shing.
 
-> ⚠️ Tunnel manzili har ishga tushganda **yangi** bo'ladi. Botdagi pastki **«Ilova»** tugmasi har safar yangi manzilga ulanadi. Eski xabardagi tugma «offline» desa — botga `/start` yuboring.
-> Manzil o'zgarmasligi uchun serverga joylab, `.env` ga `WEBAPP_URL=https://sizning-domen.uz` yozing.
+### Mahalliy sinov
+```
+cp .dev.vars.example .dev.vars
+npm run db:local
+npm run dev        # http://127.0.0.1:8787
+npm test           # soxta Telegram bilan 77 ta tekshiruv (.dev.vars sinov qiymatlari bilan)
+```
 
-### Sozlamalar (`.env`)
-
-| O'zgaruvchi | Ma'nosi |
-|---|---|
-| `BOT_TOKEN` | BotFather tokeni (majburiy) |
-| `TEACHER_CODE` | O'qituvchilar uchun maxfiy kod (majburiy, aks holda o'qituvchi bo'lib bo'lmaydi) |
-| `WEBAPP_URL` | Tayyor HTTPS manzil bo'lsa (tunnel kerak bo'lmaydi) |
-| `PORT` | Server porti (standart 5000) |
-| `NGROK_AUTHTOKEN` | Ixtiyoriy: Cloudflare ishlamasa ngrok zaxira |
-| `DEV_MODE=1` | **Faqat o'z kompyuteringizda** brauzerda sinash uchun. Serverda yoqmang! |
+### Eski (Python) variant
+`app.py`, `bot.py`, `run.py` — kompyuterda ishga tushirish uchun saqlangan (`pip install -r requirements.txt`, `python run.py`). Cloudflare variantini ishlatsangiz kerak emas.
 
 ## 📝 Savol formati
 
@@ -66,5 +66,5 @@ Ro'yxatdan o'tish va rol faqat botda hal qilinadi; veb-ilova buni o'zgartira olm
 
 ## 🗄️ Ma'lumotlar bazasi
 
-SQLite (`quiz_bot.db`): `users`, `tests`, `questions`, `results`, `attempts`. Eski baza avtomatik yangilanadi.
-Fayl telefon raqamlarni saqlaydi, shuning uchun u `.gitignore` da.
+Cloudflare D1 (SQLite): `users`, `tests`, `questions`, `results`, `attempts`, `bot_state`, `code_attempts` (`schema.sql`).
+Baza telefon raqamlarni saqlaydi — repoga qo'shmang.

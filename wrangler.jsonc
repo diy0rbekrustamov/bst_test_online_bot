@@ -1,0 +1,27 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "bst-test-online-bot",
+  "main": "src/worker.js",
+  "compatibility_date": "2025-09-01",
+  "observability": { "enabled": true },
+
+  // Veb-ilova (webapp/index.html) statik fayl sifatida beriladi; faqat shu yo'llar Worker kodiga boradi
+  "assets": {
+    "directory": "./webapp",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*", "/telegram", "/setup"]
+  },
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "bst-test-db",
+      "database_id": "0e0aa556-bbf5-459c-943b-ca06106a2941"
+    }
+  ]
+
+  // Maxfiy qiymatlar kodda EMAS — Cloudflare'da saqlanadi:
+  //   npx wrangler secret put BOT_TOKEN
+  //   npx wrangler secret put TEACHER_CODE
+  //   npx wrangler secret put WEBHOOK_SECRET   (faqat A-Z a-z 0-9 _ - belgilari)
+}

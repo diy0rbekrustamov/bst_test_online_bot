@@ -1,0 +1,17 @@
+{
+  "name": "bst-test-online-bot",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Telegram online test bot — Cloudflare Workers + D1",
+  "scripts": {
+    "dev": "wrangler dev --local",
+    "db:local": "wrangler d1 execute bst-test-db --local --file=schema.sql",
+    "db:remote": "wrangler d1 execute bst-test-db --remote --file=schema.sql",
+    "deploy": "wrangler deploy",
+    "test": "node test/run.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}
